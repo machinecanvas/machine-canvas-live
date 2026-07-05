@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="140" viewBox="0 0 660 140">
+  <g transform="translate(22,22) scale(4)">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="#00E5FF" stroke-width="1"/>
+    <line x1="12" y1="1" x2="12" y2="23" stroke="#FF2BD6" stroke-width="1"/>
+    <line x1="1" y1="12" x2="23" y2="12" stroke="#FFE600" stroke-width="1"/>
+  </g>
+  <text x="140" y="66" font-family="Arial, Helvetica, 'Liberation Sans', sans-serif" font-weight="800" font-size="50" letter-spacing="-1" fill="#FFFFFF">MACHINE CANVAS</text>
+  <text x="142" y="98" font-family="'JetBrains Mono', 'Courier New', monospace" font-weight="500" font-size="15" letter-spacing="5" fill="#00E5FF">WALL &amp; FLOOR PRINTING</text>
+</svg>
