@@ -53,7 +53,7 @@
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, clipX, H); ctx.clip();
     ctx.drawImage(img, dx, dy, dw, dh);
-    ctx.fillStyle = "rgba(5,5,5,0.45)";
+    ctx.fillStyle = "rgba(5,5,5,0.8)";
     ctx.fillRect(0, 0, clipX, H);
     ctx.restore();
   }
