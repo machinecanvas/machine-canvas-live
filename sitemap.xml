@@ -6,4 +6,20 @@
   <url><loc>https://www.machinecanvas-wallandfloorprinting.com/portfolio.html</loc><priority>0.7</priority></url>
   <url><loc>https://www.machinecanvas-wallandfloorprinting.com/faq.html</loc><priority>0.6</priority></url>
   <url><loc>https://www.machinecanvas-wallandfloorprinting.com/contact.html</loc><priority>0.8</priority></url>
+
+  <!-- Location pages -->
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/manchester</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/london</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/birmingham</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/leeds</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/liverpool</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/locations/glasgow</loc><priority>0.8</priority></url>
+
+  <!-- Commercial vertical pages -->
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/gyms-leisure</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/hotels-hospitality</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/restaurants-cafes</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/offices-corporate</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/schools-nurseries</loc><priority>0.8</priority></url>
+  <url><loc>https://www.machinecanvas-wallandfloorprinting.com/commercial/retail-fitouts</loc><priority>0.8</priority></url>
 </urlset>
