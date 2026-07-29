@@ -1,0 +1,18 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  # Pre-renders blog posts to static HTML (scripts/build-blog.js) before
+  # publish, so blog content is present in the initial HTML response rather
+  # than only appearing after client-side JS runs. Safe to run even before
+  # OPINLY_API_KEY is set — it just skips pre-rendering and logs why.
+  command = "node scripts/build-blog.js"
+
+[[headers]]
+  for = "/blog-sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
+
+[[headers]]
+  for = "/blog-rss.xml"
+  [headers.values]
+    Content-Type = "application/rss+xml; charset=utf-8"
