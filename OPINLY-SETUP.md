@@ -2,22 +2,36 @@
 
 What was added:
 
-- `blog.html` — blog index (grid of posts, pagination)
-- `blog-post.html` — single post template (renders via `?slug=`, or pretty
-  URL `/blog/<slug>` through the redirect below)
+- `blog.html` — blog index (grid of posts, pagination; latest posts are also
+  pre-rendered into the static HTML by the build script below)
+- `blog-post.html` — single post **template**. At build time,
+  `scripts/build-blog.js` fills this template in for every published post
+  and writes a real, complete HTML file to `blog/<slug>.html` — full title,
+  meta tags, JSON-LD and article body baked in, no JavaScript required to
+  read it. The client-rendered `?slug=` version stays as a fallback for any
+  post published after the last deploy.
+- `scripts/build-blog.js` — the pre-renderer described above. Runs via
+  `netlify.toml`'s build command. Never fails the build: if
+  `OPINLY_API_KEY` isn't set yet, or Opinly is unreachable, it logs why and
+  skips pre-rendering, leaving the site to deploy normally.
 - `js/opinly-client.js` — shared fetch client + rich-text renderer + CDN
-  image URL helper
-- `js/opinly-blog-index.js`, `js/opinly-blog-post.js` — page logic
+  image URL helper (used client-side as the fallback path)
+- `js/opinly-blog-index.js`, `js/opinly-blog-post.js` — client-side page
+  logic (fallback for posts not yet pre-rendered)
 - `netlify/functions/opinly-proxy.js` — proxies content requests to Opinly,
   keeps your API key server-side
 - `netlify/functions/opinly-webhook.js` — verifies Opinly's Svix-signed
   webhook (no npm dependency — signature check is done by hand)
 - `netlify/functions/blog-sitemap.js`, `blog-rss.js` — server-rendered
-  sitemap/RSS for the blog (since this site has no build step, these can't
-  be static files — they're generated fresh on each request)
-- `_redirects` — pretty URLs (`/blog/:slug`) and routes for the functions
-  above
-- `netlify.toml` — tells Netlify where the functions live
+  sitemap/RSS for the blog, generated fresh on each request. Both return a
+  valid (if empty) response with a `200` even if `OPINLY_API_KEY` isn't set,
+  rather than erroring — a sitemap/RSS URL should never 500 for a crawler.
+- `_redirects` — pretty URLs (`/blog/:slug` fallback, plus 301s from every
+  `.html` page to its canonical extensionless URL) and routes for the
+  functions above
+- `netlify.toml` — build command, and tells Netlify where the functions live
+- `sitemap.xml` — rewritten to canonical extensionless URLs with `lastmod`
+  dates; broken `/locations/*` entries with no matching page were removed
 - `robots.txt` — now also points at `/blog-sitemap.xml`
 - "Blog" added to nav + footer across all existing pages
 
@@ -50,9 +64,10 @@ https://<your-site>.netlify.app/opinly-webhook
 ## 3. Deploy
 
 Push this repo to GitHub and connect it to Netlify as usual (or drag-and-drop
-deploy). No build command is needed — `netlify.toml` sets `publish = "."`
-and `functions = "netlify/functions"`. Netlify installs no dependencies for
-the functions since they're written with zero npm packages.
+deploy). `netlify.toml` sets `publish = "."`, `functions = "netlify/functions"`,
+and a build `command` that runs `scripts/build-blog.js` to pre-render blog
+posts. No npm install step is needed — the functions and the build script
+are both written with zero npm packages, using Node's built-in `fetch`.
 
 ## 4. Test locally (optional)
 
@@ -67,8 +82,9 @@ Then visit `http://localhost:8888/blog`.
 
 ## Known trade-off
 
-This is a plain static site with no build step, so blog pages are rendered
-client-side (JS fetches Opinly content after the page loads) rather than
-server-rendered. SEO tags and JSON-LD are injected via JS — fine for Google,
-which executes JS, but `blog-sitemap.xml` and `blog-rss.xml` exist
-specifically to give crawlers that don't a fully server-rendered fallback.
+Blog posts are now pre-rendered to real static HTML at build time (see
+above), so this no longer relies on JavaScript for search engines to read
+article content. The one gap: a post published in Opinly *between* deploys
+won't have a static file yet, so it falls back to the client-rendered
+`?slug=` version until the next deploy or webhook-triggered rebuild (set
+`BUILD_HOOK_URL` if you want that to happen automatically).

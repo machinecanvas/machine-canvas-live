@@ -1,3 +1,33 @@
+# Canonical URL enforcement — permanently redirect .html versions to the
+# extensionless canonical URL declared in each page's <link rel="canonical">.
+# These are explicit (rather than relying on a dashboard "Pretty URLs"
+# toggle) so the 301 is guaranteed regardless of Netlify site settings.
+/index.html         /                                    301
+/commercial.html     /commercial                          301
+/pricing.html        /pricing                             301
+/portfolio.html      /portfolio                           301
+/faq.html            /faq                                 301
+/contact.html        /contact                             301
+/blog.html           /blog                                301
+/privacy.html        /privacy                             301
+/terms.html          /terms                               301
+/refunds.html        /refunds                             301
+/thanks.html         /thanks                              301
+/commercial/hotels-hospitality.html          /commercial/hotels-hospitality          301
+/commercial/gyms-leisure.html                /commercial/gyms-leisure                301
+/commercial/offices-corporate.html           /commercial/offices-corporate           301
+/commercial/retail-fitouts.html              /commercial/retail-fitouts              301
+/commercial/restaurants-cafes.html           /commercial/restaurants-cafes           301
+/commercial/schools-nurseries.html           /commercial/schools-nurseries           301
+/commercial/automotive-carparks.html         /commercial/automotive-carparks         301
+/commercial/infrastructure-public-realm.html /commercial/infrastructure-public-realm 301
+/commercial/events-exhibitions.html          /commercial/events-exhibitions          301
+/commercial/residential-murals.html          /commercial/residential-murals          301
+/locations/manchester.html                   /locations/manchester                   301
+/locations/lytham-st-annes.html               /locations/lytham-st-annes               301
+/locations/blackpool-fylde-coast.html         /locations/blackpool-fylde-coast         301
+/locations/lancashire.html                    /locations/lancashire                    301
+
 # Opinly blog integration
 /blog-sitemap.xml   /.netlify/functions/blog-sitemap    200
 /blog-rss.xml       /.netlify/functions/blog-rss         200

@@ -10,18 +10,29 @@ const UPSTREAM = "https://sdk.opinly.ai";
 
 exports.handler = async () => {
   const apiKey = process.env.OPINLY_API_KEY;
-  if (!apiKey) {
-    return { statusCode: 500, body: "OPINLY_API_KEY not set" };
-  }
-
   let routes = [];
-  try {
-    const res = await fetch(`${UPSTREAM}/v1/content/routes`, {
-      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-    });
-    if (res.ok) routes = await res.json();
-  } catch (err) {
-    console.error("blog-sitemap: failed to fetch routes", err);
+
+  // Degrade gracefully rather than 500: search engines that fetch this URL
+  // should always get a valid (if possibly empty) sitemap, never an error
+  // response — a 500 here can get the URL flagged as broken in Search
+  // Console / Bing Webmaster Tools. If the key isn't configured yet, or the
+  // upstream call fails, we still return 200 with whatever routes we have
+  // (i.e. none), and log the real reason server-side.
+  if (!apiKey) {
+    console.error("blog-sitemap: OPINLY_API_KEY is not set — returning sitemap with no blog routes");
+  } else {
+    try {
+      const res = await fetch(`${UPSTREAM}/v1/content/routes`, {
+        headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      });
+      if (res.ok) {
+        routes = await res.json();
+      } else {
+        console.error("blog-sitemap: upstream returned", res.status);
+      }
+    } catch (err) {
+      console.error("blog-sitemap: failed to fetch routes", err);
+    }
   }
 
   const urlFor = (route) => {

@@ -6,20 +6,26 @@ const UPSTREAM = "https://sdk.opinly.ai";
 
 exports.handler = async (event) => {
   const apiKey = process.env.OPINLY_API_KEY;
-  if (!apiKey) {
-    return { statusCode: 500, body: "OPINLY_API_KEY not set" };
-  }
-
   const limit = (event.queryStringParameters && event.queryStringParameters.limit) || "20";
-
   let items = [];
-  try {
-    const res = await fetch(`${UPSTREAM}/v1/content/rss?limit=${encodeURIComponent(limit)}`, {
-      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-    });
-    if (res.ok) items = await res.json();
-  } catch (err) {
-    console.error("blog-rss: failed to fetch rss items", err);
+
+  // Degrade gracefully rather than 500 — an RSS reader or crawler should
+  // always get a valid (if possibly empty) feed, never an error response.
+  if (!apiKey) {
+    console.error("blog-rss: OPINLY_API_KEY is not set — returning empty feed");
+  } else {
+    try {
+      const res = await fetch(`${UPSTREAM}/v1/content/rss?limit=${encodeURIComponent(limit)}`, {
+        headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      });
+      if (res.ok) {
+        items = await res.json();
+      } else {
+        console.error("blog-rss: upstream returned", res.status);
+      }
+    } catch (err) {
+      console.error("blog-rss: failed to fetch rss items", err);
+    }
   }
 
   const itemsXml = items
