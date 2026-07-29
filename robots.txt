@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
 Sitemap: https://www.machinecanvas-wallandfloorprinting.com/sitemap.xml
+Sitemap: https://www.machinecanvas-wallandfloorprinting.com/blog-sitemap.xml

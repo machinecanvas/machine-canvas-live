@@ -1,0 +1,5 @@
+# Opinly blog integration
+/blog-sitemap.xml   /.netlify/functions/blog-sitemap    200
+/blog-rss.xml       /.netlify/functions/blog-rss         200
+/opinly-webhook     /.netlify/functions/opinly-webhook   200
+/blog/*             /blog-post.html?slug=:splat          200
