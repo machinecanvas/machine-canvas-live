@@ -28,6 +28,8 @@
 /locations/blackpool-fylde-coast.html         /locations/blackpool-fylde-coast         301
 /locations/lancashire.html                    /locations/lancashire                    301
 
+/case-studies/spaceman-bedroom-print.html /case-studies/spaceman-bedroom-print 301
+
 # Opinly blog integration
 /blog-sitemap.xml   /.netlify/functions/blog-sitemap    200
 /blog-rss.xml       /.netlify/functions/blog-rss         200
