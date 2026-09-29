@@ -1,0 +1,7 @@
+[
+  {"slug": "blackpool-tower-sash-window", "room": "living-room-armchair.jpg", "pxPerCm": 4.7, "centerX": 1100, "top": 115, "widthCm": 100, "heightCm": 150},
+  {"slug": "harbour-shutters-window", "room": "kitchen-diner.jpg", "pxPerCm": 5.0, "centerX": 945, "top": 290, "widthCm": 150, "heightCm": 100, "keepDarkerThan": 60, "keep": [[830, 395, 240, 35]]},
+  {"slug": "coastal-dunes-arched-window", "room": "coastal-bedroom.jpg", "pxPerCm": 4.4, "centerX": 946, "top": 175, "widthCm": 150, "heightCm": 100},
+  {"slug": "cornish-harbour-arched-window", "room": "lounge-sofa.jpg", "pxPerCm": 4.3, "centerX": 946, "top": 140, "widthCm": 150, "heightCm": 100},
+  {"slug": "mediterranean-marina-window", "room": "dining-sideboard.jpg", "pxPerCm": 4.8, "centerX": 955, "top": 160, "widthCm": 150, "heightCm": 100, "keepDarkerThan": 90, "whiten": [200, 232]}
+]
