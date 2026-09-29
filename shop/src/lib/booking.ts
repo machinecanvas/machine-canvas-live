@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { BOOKING, NEW_CUSTOMER_DISCOUNT_PCT, type Category, type Slot } from "@/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
-import { shopUrl } from "@/lib/env";
+import { env, shopUrl } from "@/lib/env";
 import { isSlotAvailable } from "@/lib/availability";
 import { formatLongDate, isBookableDate, slotLabel, slotWindow } from "@/lib/dates";
 import { areaM2, customPrice, formatGBP, newCustomerDiscount, validDimensions } from "@/lib/pricing";
@@ -185,7 +185,8 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
                 ]
                   .filter(Boolean)
                   .join(" "),
-                ...(item.imageUrl ? { images: [item.imageUrl] } : {}),
+                // Stripe needs absolute URLs; bundled images are stored as "/shop/…".
+                ...(item.imageUrl ? { images: [item.imageUrl.startsWith("/") ? `${env.siteUrl()}${item.imageUrl}` : item.imageUrl] } : {}),
               },
             },
           },

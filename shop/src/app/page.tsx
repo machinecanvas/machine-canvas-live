@@ -57,10 +57,10 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           {products.map((p) => (
             <li key={p.id}>
               <Link href={`/${p.slug}`} className="group block border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
-                <div className="aspect-[4/3] overflow-hidden bg-zinc-900">
+                <div className="aspect-[4/3] overflow-hidden bg-white">
                   {p.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image_url} alt={p.title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    <img src={p.image_url} alt={p.title} loading="lazy" className="h-full w-full object-contain transition duration-500 group-hover:scale-105" />
                   )}
                 </div>
                 <div className="p-5">
