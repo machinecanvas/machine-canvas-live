@@ -41,8 +41,7 @@ Do everything in **test mode** first and run the checklist at the bottom before 
 ### 1. Supabase
 
 1. Create a project at supabase.com (region: London `eu-west-2`).
-2. **SQL editor** → paste and run `supabase/migrations/0001_shop.sql`. This creates the tables, functions, security policies and two storage buckets (`product-images` public, `custom-uploads` private).
-   Then run `supabase/migrations/0002_window_prints.sql` to add the five launch products (window-view wall prints, £350 each; images in `public/products/`).
+2. Open `supabase/setup.sql`, copy **all of its contents** (not just the file name), paste them into **SQL Editor → New query** and click **Run**. It should say "Success. No rows returned". This creates the tables, functions, security policies, two storage buckets (`product-images` public, `custom-uploads` private) and the five launch products. It's safe to run again if anything goes wrong. (The same SQL is split into `migrations/0001_shop.sql` and `0002_window_prints.sql` for the Supabase CLI.)
 3. **Project settings → API keys**: copy the project URL, the **publishable** key and a **secret** key into the env vars below.
 4. **Authentication → Email templates → Magic link**: add the code so the admin sign-in email includes it, e.g. `<p>Your sign-in code: <strong>{{ .Token }}</strong></p>`.
 5. Optional but recommended: **Authentication → SMTP** — send auth emails through Resend (smtp.resend.com), because Supabase's built-in email is heavily rate-limited.
