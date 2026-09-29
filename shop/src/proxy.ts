@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { supabaseProjectUrl } from "@/lib/supabase/url";
 
 // Refreshes the admin's Supabase session cookie before admin pages render.
 // Authorisation itself (the owner email allow-list) is checked in
 // requireAdmin() on every admin page and server action.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = supabaseProjectUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return response;
 
