@@ -22,13 +22,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         ← All prints
       </Link>
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div>
-          <div className="border border-zinc-800 bg-zinc-900">
-            {product.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.image_url} alt={product.title} className="w-full" />
-            )}
-          </div>
+        <div className="space-y-4">
+          {product.room_image_url && (
+            <figure>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={product.room_image_url} alt={`${product.title} printed on a wall`} className="w-full border border-zinc-800" />
+              <figcaption className="mono-label mt-2">How it looks on your wall (illustration)</figcaption>
+            </figure>
+          )}
+          {product.image_url && (
+            <figure>
+              <div className="border border-zinc-800 bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={product.image_url} alt={product.title} className={`w-full ${product.room_image_url ? "mx-auto max-h-96 object-contain" : ""}`} />
+              </div>
+              {product.room_image_url && <figcaption className="mono-label mt-2">The design</figcaption>}
+            </figure>
+          )}
           <p className="mt-3 font-mono text-xs text-zinc-500">
             Purchased {product.purchase_count} {product.purchase_count === 1 ? "time" : "times"}
           </p>

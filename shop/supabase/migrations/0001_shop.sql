@@ -13,6 +13,7 @@ create table public.products (
   description text not null default '',
   category text not null check (category in ('wall', 'floor')),
   image_url text,               -- public web-optimised thumbnail
+  room_image_url text,          -- optional: the print shown on a wall in a room (feature image)
   original_image_path text,     -- original upload in the product-images bucket
   -- Lowest price across sizes, inc. VAT ("from £X" on the shop grid).
   price_pence integer not null check (price_pence > 0),

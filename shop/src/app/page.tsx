@@ -58,9 +58,15 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             <li key={p.id}>
               <Link href={`/${p.slug}`} className="group block border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
                 <div className="aspect-[4/3] overflow-hidden bg-white">
-                  {p.image_url && (
+                  {/* Prefer the room photo (the print on a wall); fall back to the design itself. */}
+                  {(p.room_image_url ?? p.image_url) && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image_url} alt={p.title} loading="lazy" className="h-full w-full object-contain transition duration-500 group-hover:scale-105" />
+                    <img
+                      src={(p.room_image_url ?? p.image_url)!}
+                      alt={p.room_image_url ? `${p.title} printed on a wall` : p.title}
+                      loading="lazy"
+                      className={`h-full w-full transition duration-500 group-hover:scale-105 ${p.room_image_url ? "object-cover" : "object-contain"}`}
+                    />
                   )}
                 </div>
                 <div className="p-5">

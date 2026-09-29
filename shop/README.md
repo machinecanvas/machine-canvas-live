@@ -104,11 +104,15 @@ Set `SITE_URL=http://localhost:3000` locally so Stripe redirects back to your ma
 
 Custom prints use the main site's published pricing: **£197 minimum (covers up to 1 m²), then £49 per extra m²**, VAT included, same for walls and floors, rounded to the nearest £1 (10 m² = £638). **New customers get 50% off their first booking** (shop products and custom prints). A customer counts as new if no paid booking, or current slot hold, exists for their email or phone number. The discount is decided on the server at checkout, shown on the Stripe page, in the emails and in the admin. Set `NEW_CUSTOMER_DISCOUNT_PCT` to `0` to turn it off. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. Shop products have their own fixed prices, set per size in the admin.
 
+## Room photos
+
+Each product can have a **room photo**: the print shown on a wall in a real-looking room, used as the main image in the shop. For the launch prints these are made by `scripts/room-mockups.mjs` from empty-room photos in `mockups/rooms/`. The script places the actual design onto the wall at its true size (the scale is measured from furniture in the room) and blends it like ink on paint. Placement for each product is in `mockups/room-mockups.json`. Run `node scripts/room-mockups.mjs` after changing a design or a placement. For new products, upload a room photo in the admin.
+
 ## Admin
 
 Go to `/shop/admin`, enter an email from `ADMIN_EMAILS`, and type the 6-digit code from the email.
 
-- **Products:** drag and drop an image (the original is kept and a 1600px WebP is generated), then set title, description, wall/floor, one or more sizes with prices inc. VAT, and whether it's visible. The list shows how many times each product has sold. You can hide/show or delete a product; deleting keeps its past bookings.
+- **Products:** drag and drop the design image (and optionally a room photo) (the original is kept and a 1600px WebP is generated), then set title, description, wall/floor, one or more sizes with prices inc. VAT, and whether it's visible. The list shows how many times each product has sold. You can hide/show or delete a product; deleting keeps its past bookings.
 - **Bookings:** upcoming and past, with customer details and a download link for custom artwork. **Cancel & refund** refunds in full through Stripe, frees the slot and deletes the calendar event.
 - **Block-out dates:** block a whole day or one slot. Existing bookings on that day are not affected.
 

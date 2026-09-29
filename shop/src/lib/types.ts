@@ -9,6 +9,7 @@ export type Product = {
   description: string;
   category: Category;
   image_url: string | null;
+  room_image_url: string | null;
   original_image_path: string | null;
   price_pence: number;
   size_options: SizeOption[];

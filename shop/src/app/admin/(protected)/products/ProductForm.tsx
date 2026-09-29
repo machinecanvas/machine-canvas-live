@@ -30,26 +30,31 @@ export function ProductForm({ product }: { product?: Product }) {
   );
   const [preview, setPreview] = useState<string | null>(product?.image_url ?? null);
   const [originalPath, setOriginalPath] = useState<string | null>(null);
+  const [roomPreview, setRoomPreview] = useState<string | null>(product?.room_image_url ?? null);
+  const [roomOriginalPath, setRoomOriginalPath] = useState<string | null>(null);
+  const [removeRoomImage, setRemoveRoomImage] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
 
-  async function onFile(file: File | undefined) {
+  async function onFile(file: File | undefined, kind: "design" | "room") {
     if (!file) return;
     setError(null);
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return setError("Please use a JPG, PNG or WebP image.");
     if (file.size > 50 * 1024 * 1024) return setError("Images must be under 50 MB.");
-    setPreview(URL.createObjectURL(file));
+    const [setPrev, setPath, fallback] =
+      kind === "design" ? [setPreview, setOriginalPath, product?.image_url ?? null] : [setRoomPreview, setRoomOriginalPath, product?.room_image_url ?? null];
+    setPrev(URL.createObjectURL(file));
+    if (kind === "room") setRemoveRoomImage(false);
     setUploading(true);
     try {
       const { path, token } = await productUploadUrl(file.type);
       const { error: upErr } = await supabaseBrowser().storage.from("product-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (upErr) throw upErr;
-      setOriginalPath(path);
+      setPath(path);
     } catch (e) {
       setError(`Upload failed: ${(e as Error).message}`);
-      setPreview(product?.image_url ?? null);
+      setPrev(fallback);
     } finally {
       setUploading(false);
     }
@@ -71,6 +76,8 @@ export function ProductForm({ product }: { product?: Product }) {
         category,
         active,
         originalPath,
+        roomOriginalPath,
+        removeRoomImage,
         sizes: sizes.map((s) => ({
           label: s.label,
           width_cm: Number(s.width),
@@ -84,36 +91,30 @@ export function ProductForm({ product }: { product?: Product }) {
 
   return (
     <form onSubmit={submit} className="grid gap-8 lg:grid-cols-2">
-      <div>
-        <label
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            onFile(e.dataTransfer.files[0]);
-          }}
-          className={`flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden border-2 border-dashed transition ${
-            dragging ? "border-cyan bg-cyan/10" : "border-zinc-700 hover:border-zinc-500"
-          }`}
-        >
-          <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="p-6 text-center text-zinc-400">
-              Drag &amp; drop an image here
-              <br />
-              <span className="font-mono text-xs text-zinc-500">or click to choose · JPG, PNG, WebP</span>
-            </span>
+      <div className="space-y-6">
+        <div>
+          <p className="mono-label mb-2">The design</p>
+          <DropZone preview={preview} onFile={(f) => onFile(f, "design")} hint="Drag & drop the design image here" />
+        </div>
+        <div>
+          <p className="mono-label mb-2">Room photo (optional): the print on a wall, used as the main shop image</p>
+          <DropZone preview={roomPreview} onFile={(f) => onFile(f, "room")} hint="Drag & drop a room photo here" />
+          {roomPreview && (
+            <button
+              type="button"
+              className="mt-2 font-mono text-xs text-magenta"
+              onClick={() => {
+                setRoomPreview(null);
+                setRoomOriginalPath(null);
+                setRemoveRoomImage(true);
+              }}
+            >
+              Remove room photo
+            </button>
           )}
-        </label>
-        <p className="mt-2 font-mono text-xs text-zinc-500">
-          {uploading ? "Uploading…" : "The original is kept; a web-optimised copy is made when you save."}
+        </div>
+        <p className="font-mono text-xs text-zinc-500">
+          {uploading ? "Uploading…" : "Originals are kept; web-optimised copies are made when you save."}
         </p>
       </div>
 
@@ -197,5 +198,38 @@ export function ProductForm({ product }: { product?: Product }) {
         </button>
       </div>
     </form>
+  );
+}
+
+function DropZone({ preview, onFile, hint }: { preview: string | null; onFile: (f: File | undefined) => void; hint: string }) {
+  const [dragging, setDragging] = useState(false);
+  return (
+    <label
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        onFile(e.dataTransfer.files[0]);
+      }}
+      className={`flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden border-2 border-dashed transition ${
+        dragging ? "border-cyan bg-cyan/10" : "border-zinc-700 hover:border-zinc-500"
+      }`}
+    >
+      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
+      {preview ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={preview} alt="" className="h-full w-full object-contain" />
+      ) : (
+        <span className="p-6 text-center text-zinc-400">
+          {hint}
+          <br />
+          <span className="font-mono text-xs text-zinc-500">or click to choose · JPG, PNG, WebP</span>
+        </span>
+      )}
+    </label>
   );
 }

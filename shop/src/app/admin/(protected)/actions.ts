@@ -60,6 +60,8 @@ const ProductInput = z.object({
   active: z.boolean(),
   sizes: z.array(Size).min(1, "Add at least one size").max(20),
   originalPath: z.string().regex(/^originals\/[0-9a-f-]{36}\.(jpg|png|webp)$/).nullable(),
+  roomOriginalPath: z.string().regex(/^originals\/[0-9a-f-]{36}\.(jpg|png|webp)$/).nullable(),
+  removeRoomImage: z.boolean(),
 });
 
 export type ProductInputType = z.infer<typeof ProductInput>;
@@ -90,6 +92,16 @@ export async function saveProduct(input: ProductInputType): Promise<{ error?: st
     }
   } else if (!p.id) {
     return { error: "Please add an image." };
+  }
+  if (p.roomOriginalPath) {
+    try {
+      row.room_image_url = await makeThumbnail(p.roomOriginalPath);
+    } catch (e) {
+      console.error("room thumbnail failed", e);
+      return { error: "Couldn't process the room photo. Try a different file." };
+    }
+  } else if (p.removeRoomImage) {
+    row.room_image_url = null;
   }
 
   const db = supabaseAdmin();
