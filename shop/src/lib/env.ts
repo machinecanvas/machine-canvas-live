@@ -1,4 +1,5 @@
 import "server-only";
+import { supabaseProjectUrl } from "@/lib/supabase/url";
 
 // Server-only environment access. Throws a clear error when a variable is
 // missing so misconfiguration shows up at the first request, not as a
@@ -10,7 +11,7 @@ function required(name: string): string {
 }
 
 export const env = {
-  supabaseUrl: () => required("NEXT_PUBLIC_SUPABASE_URL"),
+  supabaseUrl: () => supabaseProjectUrl(required("NEXT_PUBLIC_SUPABASE_URL")),
   supabasePublishableKey: () => required("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
   supabaseSecretKey: () => required("SUPABASE_SECRET_KEY"),
   stripeSecretKey: () => required("STRIPE_SECRET_KEY"),
