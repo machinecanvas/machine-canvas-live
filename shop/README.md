@@ -76,7 +76,7 @@ Any event in this calendar blocks the slots it overlaps (e.g. a 10:00–11:00 de
 1. **Add New → Project** → import `machinecanvas/machine-canvas-live` → set **Root Directory** to `shop`. The framework is detected as Next.js.
 2. Add every variable from `.env.example` under **Settings → Environment Variables** (Production, and Preview with test keys).
 3. Deploy. Note the production domain (e.g. `machine-canvas-shop.vercel.app`).
-4. **Cron:** `vercel.json` runs `/shop/api/cron/expire-holds` every minute, which needs a **Pro** plan. On Hobby, change the schedule to once a day. Holds are still released when someone tries the same slot and when Stripe expires the session (~30 minutes), so the only effect is that an abandoned slot may show as taken for up to 30 minutes instead of 10.
+4. **Cron:** `vercel.json` runs `/shop/api/cron/expire-holds` once a day (03:00 UTC), which is all the free Hobby plan allows. That's fine: lapsed holds already show as free in the calendar straight away, and they're also released when someone books the same slot or when Stripe expires the checkout (~30 minutes). On a Pro plan you can change the schedule to `* * * * *` to also expire lapsed Stripe checkouts after 10 minutes.
 
 ### 6. Connect the main site (Netlify)
 
