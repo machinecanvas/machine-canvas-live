@@ -37,7 +37,8 @@ export type Booking = {
   customer_email: string;
   customer_phone: string;
   install_address: string;
-  amount_pence: number;
+  amount_pence: number; // charged, after discount
+  discount_pence: number;
   calendar_event_id: string | null;
   emails_sent_at: string | null;
   refunded_at: string | null;

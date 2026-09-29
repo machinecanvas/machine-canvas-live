@@ -54,6 +54,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                 <p className="text-sm text-zinc-400">
                   {b.products?.title ?? (b.custom_upload_path ? "Custom print" : "Deleted product")} · {b.category} · {b.size_label ? `${b.size_label}, ` : ""}
                   {Number(b.width_cm)} × {Number(b.height_cm)} cm · {formatGBP(b.amount_pence)}
+                  {b.discount_pence > 0 && <span className="text-zinc-500"> (new customer, {formatGBP(b.discount_pence)} off)</span>}
                 </p>
                 {links[i] && (
                   <a href={links[i]!} className="mt-2 inline-block text-sm text-cyan underline">

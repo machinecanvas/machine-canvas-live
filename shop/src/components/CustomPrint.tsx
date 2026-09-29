@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, BUSINESS, CUSTOM_UPLOAD, PRICING, type Category } from "@/config";
+import { BOOKING, BUSINESS, CUSTOM_UPLOAD, NEW_CUSTOMER_DISCOUNT_PCT, PRICING, type Category } from "@/config";
 import { api } from "@/lib/paths";
-import { customPrice, dpiVerdict, effectiveDpi, formatGBP, validDimensions } from "@/lib/pricing";
+import { customPrice, dpiVerdict, effectiveDpi, formatGBP, newCustomerDiscount, validDimensions } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
@@ -187,7 +187,13 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
           )}
           {price && (
             <p className="mt-1 font-mono text-xs text-zinc-500">
-              {formatGBP(price.setup * 100)} setup + {price.areaM2.toFixed(2)} m² × {formatGBP(PRICING.PER_M2[category] * 100)}/m²
+              {formatGBP(price.minJob * 100)} up to {PRICING.INCLUDED_M2} m²
+              {price.extraM2 > 0 && ` + ${price.extraM2.toFixed(2)} m² × ${formatGBP(PRICING.PER_EXTRA_M2[category] * 100)}`}
+            </p>
+          )}
+          {price && NEW_CUSTOMER_DISCOUNT_PCT > 0 && (
+            <p className="mt-2 text-sm text-cyan">
+              First booking with us? {formatGBP(price.pricePence - newCustomerDiscount(price.pricePence))} with {NEW_CUSTOMER_DISCOUNT_PCT}% off.
             </p>
           )}
         </section>

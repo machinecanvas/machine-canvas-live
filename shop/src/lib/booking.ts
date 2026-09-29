@@ -1,12 +1,12 @@
 import "server-only";
 import type Stripe from "stripe";
-import { BOOKING, type Category, type Slot } from "@/config";
+import { BOOKING, NEW_CUSTOMER_DISCOUNT_PCT, type Category, type Slot } from "@/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
 import { shopUrl } from "@/lib/env";
 import { isSlotAvailable } from "@/lib/availability";
 import { formatLongDate, isBookableDate, slotLabel, slotWindow } from "@/lib/dates";
-import { areaM2, customPrice, validDimensions } from "@/lib/pricing";
+import { areaM2, customPrice, formatGBP, newCustomerDiscount, validDimensions } from "@/lib/pricing";
 import { inspectUpload, signedDownloadUrl, uploadDpi } from "@/lib/uploads";
 import { createEvent, deleteEvent } from "@/lib/gcal";
 import { sendBookingEmails, sendConflictEmails } from "@/lib/email";
@@ -122,6 +122,19 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
   }
 
   const db = supabaseAdmin();
+
+  // First booking for this email/phone gets the new-customer discount.
+  let discountPence = 0;
+  if (NEW_CUSTOMER_DISCOUNT_PCT > 0) {
+    const { data: returning, error: rcErr } = await db.rpc("is_returning_customer", {
+      p_email: input.customer.email,
+      p_phone: input.customer.phone,
+    });
+    if (rcErr) throw rcErr;
+    if (returning !== true) discountPence = newCustomerDiscount(item.amountPence);
+  }
+  const chargePence = item.amountPence - discountPence;
+
   const { data: bookingId, error } = await db.rpc("create_hold", {
     p_product_id: item.productId,
     p_size_label: item.sizeLabel,
@@ -135,7 +148,8 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
     p_customer_email: input.customer.email,
     p_customer_phone: input.customer.phone,
     p_install_address: input.customer.address,
-    p_amount_pence: item.amountPence,
+    p_amount_pence: chargePence,
+    p_discount_pence: discountPence,
     p_hold_minutes: BOOKING.HOLD_MINUTES,
   });
   if (error) {
@@ -160,11 +174,17 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
             quantity: 1,
             price_data: {
               currency: "gbp",
-              unit_amount: item.amountPence,
+              unit_amount: chargePence,
               tax_behavior: "inclusive",
               product_data: {
                 name: `${item.title}: ${item.category} print, supplied and installed`,
-                description: `${item.sizeLabel ? `${item.sizeLabel}, ` : ""}${size}. Installation ${when}. Price includes 20% VAT.`,
+                description: [
+                  `${item.sizeLabel ? `${item.sizeLabel}, ` : ""}${size}. Installation ${when}.`,
+                  discountPence ? `${NEW_CUSTOMER_DISCOUNT_PCT}% new customer discount applied (normally ${formatGBP(item.amountPence)}).` : "",
+                  "Price includes 20% VAT.",
+                ]
+                  .filter(Boolean)
+                  .join(" "),
                 ...(item.imageUrl ? { images: [item.imageUrl] } : {}),
               },
             },
@@ -258,7 +278,7 @@ export async function fulfilSession(session: Stripe.Checkout.Session): Promise<v
     const lines = [
       `${title}: ${booking.category} print, ${booking.size_label ? `${booking.size_label}, ` : ""}${Number(booking.width_cm)} × ${Number(booking.height_cm)} cm`,
       `Customer: ${booking.customer_name}, ${booking.customer_phone}, ${booking.customer_email}`,
-      `Paid: £${(booking.amount_pence / 100).toFixed(2)} inc. VAT`,
+      `Paid: £${(booking.amount_pence / 100).toFixed(2)} inc. VAT${booking.discount_pence ? ` (new customer discount £${(booking.discount_pence / 100).toFixed(2)})` : ""}`,
       downloadLink ? `Artwork (link valid 7 days, fresh link in admin): ${downloadLink}` : "",
       `Booking ID: ${booking.id}`,
     ].filter(Boolean);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CATEGORIES, type Category } from "@/config";
+import { CATEGORIES, NEW_CUSTOMER_DISCOUNT_PCT, type Category } from "@/config";
 import { listActiveProducts } from "@/lib/products";
 import { formatGBP } from "@/lib/pricing";
 
@@ -26,6 +26,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             Pick a design, choose your install date and pay online. We print it directly onto your wall or floor. All prices include VAT and
             installation.
           </p>
+          {NEW_CUSTOMER_DISCOUNT_PCT > 0 && (
+            <p className="mt-4 inline-block border border-cyan px-3 py-2 font-mono text-xs uppercase tracking-widest text-cyan">
+              New customers: {NEW_CUSTOMER_DISCOUNT_PCT}% off your first booking
+            </p>
+          )}
         </div>
         <Link href="/custom" className="btn btn-cyan self-start">
           Print your own image

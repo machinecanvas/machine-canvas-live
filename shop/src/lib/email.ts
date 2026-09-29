@@ -68,6 +68,7 @@ export async function sendBookingEmails(ctx: BookingEmailContext): Promise<void>
     ["Print", esc(item)],
     ["Date", esc(when)],
     ["Address", esc(booking.install_address).replace(/\n/g, "<br>")],
+    ...(booking.discount_pence ? ([["New customer discount", `−${formatGBP(booking.discount_pence)}`]] as [string, string][]) : []),
     ["Paid", `${formatGBP(booking.amount_pence)} inc. VAT`],
   ];
 

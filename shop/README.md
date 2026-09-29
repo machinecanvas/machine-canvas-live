@@ -22,7 +22,7 @@ Browser ──> Netlify (static site) ──/shop/*──> Vercel (this app) ─
 | `/shop/api/stripe/webhook` | Stripe webhook |
 | `/shop/api/cron/expire-holds` | Releases lapsed slot holds (Vercel Cron) |
 
-Key files: `src/config.ts` (prices, slot times, notice period, limits), `src/lib/pricing.ts` (custom print price: setup + per m²), `src/lib/booking.ts` (hold → checkout → payment → calendar/email → cancel/refund), `supabase/migrations/0001_shop.sql` (schema).
+Key files: `src/config.ts` (prices, slot times, notice period, limits), `src/lib/pricing.ts` (custom print price and new-customer discount), `src/lib/booking.ts` (hold → checkout → payment → calendar/email → cancel/refund), `supabase/migrations/0001_shop.sql` (schema).
 
 ## How bookings stay safe
 
@@ -101,7 +101,7 @@ Set `SITE_URL=http://localhost:3000` locally so Stripe redirects back to your ma
 
 ## Configuration (`src/config.ts`)
 
-Custom prints are priced as a **£150 setup fee + £50 per m²** of print area (same for walls and floors), rounded to the nearest £1. `PRICES_INCLUDE_VAT: true` means those figures are what the customer pays; set it to `false` to add 20% VAT on top. Example: 10 m² = £650. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. Shop products have their own fixed prices, set per size in the admin.
+Custom prints use the main site's published pricing: **£197 minimum (covers up to 1 m²), then £49 per extra m²**, VAT included, same for walls and floors, rounded to the nearest £1 (10 m² = £638). **New customers get 50% off their first booking** (shop products and custom prints). A customer counts as new if no paid booking, or current slot hold, exists for their email or phone number. The discount is decided on the server at checkout, shown on the Stripe page, in the emails and in the admin. Set `NEW_CUSTOMER_DISCOUNT_PCT` to `0` to turn it off. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. Shop products have their own fixed prices, set per size in the admin.
 
 ## Admin
 
@@ -113,6 +113,7 @@ Go to `/shop/admin`, enter an email from `ADMIN_EMAILS`, and type the 6-digit co
 
 ## Test checklist (Stripe test mode)
 
+- [ ] First booking with a new email: Stripe shows 50% off. A second booking with the same email or phone is full price.
 - [ ] Product purchase with card `4242 4242 4242 4242`: success page shows; customer and owner emails arrive with a working `.ics`; calendar event created; `purchase_count` +1; the slot now shows as taken.
 - [ ] Custom upload: a small JPG at a big size shows the warning or block; a PDF uploads; the owner email download link works.
 - [ ] Two browsers pick the same slot at once: the second gets "slot has just been taken".

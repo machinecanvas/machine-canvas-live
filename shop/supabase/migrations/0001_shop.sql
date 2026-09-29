@@ -46,7 +46,8 @@ create table public.bookings (
   customer_email text not null,
   customer_phone text not null,
   install_address text not null,
-  amount_pence integer not null check (amount_pence > 0),
+  amount_pence integer not null check (amount_pence > 0),  -- amount charged, after discount
+  discount_pence integer not null default 0 check (discount_pence >= 0),
   calendar_event_id text,
   emails_sent_at timestamptz,
   refunded_at timestamptz,
@@ -123,6 +124,7 @@ create or replace function public.create_hold(
   p_customer_phone text,
   p_install_address text,
   p_amount_pence integer,
+  p_discount_pence integer,
   p_hold_minutes integer
 ) returns uuid
 language plpgsql
@@ -141,11 +143,11 @@ begin
     insert into public.bookings (
       product_id, size_label, custom_upload_path, width_cm, height_cm, category,
       date, slot, status, hold_expires_at,
-      customer_name, customer_email, customer_phone, install_address, amount_pence
+      customer_name, customer_email, customer_phone, install_address, amount_pence, discount_pence
     ) values (
       p_product_id, p_size_label, p_custom_upload_path, p_width_cm, p_height_cm, p_category,
       p_date, p_slot, 'held', now() + make_interval(mins => p_hold_minutes),
-      p_customer_name, p_customer_email, p_customer_phone, p_install_address, p_amount_pence
+      p_customer_name, p_customer_email, p_customer_phone, p_install_address, p_amount_pence, p_discount_pence
     ) returning id into v_id;
   exception when unique_violation then
     raise exception 'slot_taken' using errcode = 'P0001';
@@ -201,6 +203,29 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- New-customer check: true if this email or phone number already has a paid
+-- booking, or a live hold (so one person can't stack discounted checkouts).
+-- Phones are compared on their last 10 digits so 07… and +447… match.
+-- ---------------------------------------------------------------------------
+create or replace function public.is_returning_customer(p_email text, p_phone text)
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1 from public.bookings
+    where (status = 'paid' or (status = 'held' and hold_expires_at > now()))
+      and (
+        lower(trim(customer_email)) = lower(trim(p_email))
+        or (
+          length(regexp_replace(p_phone, '\D', '', 'g')) >= 10
+          and right(regexp_replace(customer_phone, '\D', '', 'g'), 10) = right(regexp_replace(p_phone, '\D', '', 'g'), 10)
+        )
+      )
+  );
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Row level security: the public can read active products only. Everything
 -- else goes through the server using the secret (service role) key.
 -- ---------------------------------------------------------------------------
@@ -213,7 +238,8 @@ create policy "public reads active products" on public.products
   for select to anon, authenticated using (active);
 
 revoke execute on function public.rate_limit_hit(text, integer, integer) from public, anon, authenticated;
-revoke execute on function public.create_hold(uuid, text, text, numeric, numeric, text, date, text, text, text, text, text, integer, integer) from public, anon, authenticated;
+revoke execute on function public.create_hold(uuid, text, text, numeric, numeric, text, date, text, text, text, text, text, integer, integer, integer) from public, anon, authenticated;
+revoke execute on function public.is_returning_customer(text, text) from public, anon, authenticated;
 revoke execute on function public.mark_booking_paid(uuid, text, text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------

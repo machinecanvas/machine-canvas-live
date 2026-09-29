@@ -6,16 +6,20 @@ export type Slot = "morning" | "evening";
 
 export const CATEGORIES: Category[] = ["wall", "floor"];
 
-// Custom print price = setup fee + rate per m² of print area.
+// Custom print price, matching the main site's pricing page (VAT included):
+// a minimum job price that covers the first INCLUDED_M2, then a flat rate
+// for every extra m². Walls and floors are priced the same.
 export const PRICING = {
-  SETUP: { wall: 150, floor: 150 } as Record<Category, number>, // £
-  PER_M2: { wall: 50, floor: 50 } as Record<Category, number>, // £ per m²
-  // true: the figures above are what the customer pays (VAT included).
-  // false: they are ex VAT and 20% is added on top.
-  PRICES_INCLUDE_VAT: true,
-  VAT: 0.2,
+  MIN_JOB: { wall: 197, floor: 197 } as Record<Category, number>, // £, covers up to INCLUDED_M2
+  INCLUDED_M2: 1,
+  PER_EXTRA_M2: { wall: 49, floor: 49 } as Record<Category, number>, // £ per m² beyond INCLUDED_M2
   ROUND_TO_PENCE: 100, // round final price to the nearest £1 (use 50 for 50p)
 };
+
+// Discount for a customer's first booking (no earlier paid booking with the
+// same email or phone). Applies to shop products and custom prints.
+// Set to 0 to switch it off.
+export const NEW_CUSTOMER_DISCOUNT_PCT = 50;
 
 export const SLOTS: Record<Slot, { label: string; start: string; end: string }> = {
   morning: { label: "Morning", start: "09:00", end: "13:00" },

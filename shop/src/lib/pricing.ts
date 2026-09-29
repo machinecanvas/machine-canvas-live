@@ -1,10 +1,11 @@
-import { PRICING, CUSTOM_UPLOAD, BOOKING, type Category } from "@/config";
+import { PRICING, CUSTOM_UPLOAD, BOOKING, NEW_CUSTOMER_DISCOUNT_PCT, type Category } from "@/config";
 
 export type PriceBreakdown = {
   areaM2: number;
-  setup: number; // £
-  areaCharge: number; // £
-  pricePence: number; // final price inc. VAT, rounded
+  minJob: number; // £, covers the first PRICING.INCLUDED_M2
+  extraM2: number;
+  extraCharge: number; // £
+  pricePence: number; // full price inc. VAT, rounded
   overMaxArea: boolean;
 };
 
@@ -13,18 +14,23 @@ export function areaM2(widthCm: number, heightCm: number): number {
 }
 
 /**
- * Price for a custom print: setup fee + rate per m². Runs on both client
- * (live preview) and server (Stripe session creation); the server value is
- * the only one ever charged.
+ * Full price for a custom print (before any new-customer discount). Runs on
+ * both client (live preview) and server (Stripe session creation); the
+ * server value is the only one ever charged.
  */
 export function customPrice(category: Category, widthCm: number, heightCm: number): PriceBreakdown {
   const p = PRICING;
   const area = areaM2(widthCm, heightCm);
-  const setup = p.SETUP[category];
-  const areaCharge = area * p.PER_M2[category];
-  const incVat = (setup + areaCharge) * (p.PRICES_INCLUDE_VAT ? 1 : 1 + p.VAT);
-  const pricePence = Math.round((incVat * 100) / p.ROUND_TO_PENCE) * p.ROUND_TO_PENCE;
-  return { areaM2: area, setup, areaCharge, pricePence, overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT };
+  const minJob = p.MIN_JOB[category];
+  const extraM2 = Math.max(0, area - p.INCLUDED_M2);
+  const extraCharge = extraM2 * p.PER_EXTRA_M2[category];
+  const pricePence = Math.round(((minJob + extraCharge) * 100) / p.ROUND_TO_PENCE) * p.ROUND_TO_PENCE;
+  return { areaM2: area, minJob, extraM2, extraCharge, pricePence, overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT };
+}
+
+/** Discount in pence for a first-time customer on a given full price. */
+export function newCustomerDiscount(fullPricePence: number): number {
+  return Math.round((fullPricePence * NEW_CUSTOMER_DISCOUNT_PCT) / 100);
 }
 
 export function validDimensions(widthCm: number, heightCm: number): boolean {

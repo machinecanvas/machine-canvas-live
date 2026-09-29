@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { BOOKING, BUSINESS } from "@/config";
+import { BOOKING, BUSINESS, NEW_CUSTOMER_DISCOUNT_PCT } from "@/config";
 import { api } from "@/lib/paths";
-import { formatGBP } from "@/lib/pricing";
+import { formatGBP, newCustomerDiscount } from "@/lib/pricing";
 import { BookingCalendar, type SlotChoice } from "@/components/BookingCalendar";
 
 export type CheckoutItem =
@@ -123,6 +123,12 @@ export function CheckoutForm({
               <p className="font-display text-3xl font-extrabold">
                 {pricePence ? formatGBP(pricePence) : "—"} <span className="text-sm font-normal text-zinc-400">inc. VAT</span>
               </p>
+              {pricePence && NEW_CUSTOMER_DISCOUNT_PCT > 0 ? (
+                <p className="mt-1 text-sm text-cyan">
+                  First booking with us? You pay {formatGBP(pricePence - newCustomerDiscount(pricePence))} ({NEW_CUSTOMER_DISCOUNT_PCT}% off, applied
+                  automatically at checkout).
+                </p>
+              ) : null}
             </div>
             <button type="submit" className="btn btn-cyan" disabled={!item || !choice || submitting}>
               {submitting ? "Reserving your slot…" : choice ? "Continue to payment" : "Choose a date first"}

@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { areaM2, customPrice, dpiVerdict, effectiveDpi, formatGBP, validDimensions } from "./pricing";
+import { areaM2, customPrice, dpiVerdict, effectiveDpi, formatGBP, newCustomerDiscount, validDimensions } from "./pricing";
 
 describe("customPrice", () => {
-  it("charges £150 setup plus £50 per m²", () => {
-    const p = customPrice("wall", 500, 200);
+  it("charges the £197 minimum for anything up to 1 m²", () => {
+    expect(customPrice("wall", 100, 100).pricePence).toBe(19700);
+    expect(customPrice("wall", 50, 50).pricePence).toBe(19700);
+  });
+
+  it("adds £49 per m² beyond the first", () => {
+    const p = customPrice("wall", 500, 200); // 10 m²
     expect(p.areaM2).toBeCloseTo(10);
-    expect(p.setup).toBe(150);
-    expect(p.areaCharge).toBeCloseTo(500);
-    expect(p.pricePence).toBe(65000);
+    expect(p.extraM2).toBeCloseTo(9);
+    expect(p.extraCharge).toBeCloseTo(441);
+    expect(p.pricePence).toBe(63800);
   });
 
-  it("prices 1 m² at £200", () => {
-    expect(customPrice("wall", 100, 100).pricePence).toBe(20000);
-  });
-
-  it("uses the same rates for floors", () => {
+  it("prices floors the same as walls", () => {
     expect(customPrice("floor", 400, 250).pricePence).toBe(customPrice("wall", 400, 250).pricePence);
-    expect(customPrice("floor", 400, 250).pricePence).toBe(65000);
   });
 
   it("rounds to the nearest whole pound", () => {
-    // 1.23 m x 4.56 m = 5.6088 m² -> 150 + 280.44 = £430.44 -> £430
-    expect(customPrice("wall", 123, 456).pricePence).toBe(43000);
+    // 1.23 m x 4.56 m = 5.6088 m² -> 197 + 4.6088 x 49 = £422.83 -> £423
+    expect(customPrice("wall", 123, 456).pricePence).toBe(42300);
     for (const [w, h] of [[123, 456], [333, 77], [250, 250]]) {
       expect(customPrice("wall", w, h).pricePence % 100).toBe(0);
     }
@@ -30,6 +30,13 @@ describe("customPrice", () => {
   it("flags jobs over the per-slot area limit", () => {
     expect(customPrice("wall", 500, 300).overMaxArea).toBe(false); // exactly 15 m²
     expect(customPrice("wall", 500, 301).overMaxArea).toBe(true);
+  });
+});
+
+describe("newCustomerDiscount", () => {
+  it("takes 50% off", () => {
+    expect(newCustomerDiscount(19700)).toBe(9850);
+    expect(newCustomerDiscount(63800)).toBe(31900);
   });
 });
 
