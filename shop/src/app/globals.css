@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Brand tokens copied from the main site's css/style.css */
+@theme {
+  --color-ink: #050505;
+  --color-paper: #fafaf7;
+  --color-cyan: #00e5ff;
+  --color-magenta: #ff2bd6;
+  --color-yellowk: #ffe600;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Cabinet Grotesk", system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+}
+
+html { background: var(--color-ink); }
+body { background: var(--color-ink); color: var(--color-paper); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--color-cyan); color: var(--color-ink); }
+
+@layer components {
+  .cmyk-bar {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--color-cyan) 0 25%, var(--color-magenta) 25% 50%, var(--color-yellowk) 50% 75%, #111 75% 100%);
+  }
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-zinc-500);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    border: 1px solid currentColor;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-cyan { background: var(--color-cyan); color: var(--color-ink); border-color: var(--color-cyan); }
+  .btn-cyan:hover:not(:disabled) { background: var(--color-yellowk); border-color: var(--color-yellowk); }
+  .btn-small { padding: 8px 14px; font-size: 0.7rem; }
+  .field {
+    width: 100%;
+    background: var(--color-zinc-950);
+    border: 1px solid var(--color-zinc-700);
+    color: var(--color-paper);
+    padding: 10px 12px;
+    font-size: 16px; /* avoids iOS zoom on focus */
+  }
+  .field:focus { outline: 2px solid var(--color-cyan); outline-offset: -1px; }
+  .label { display: block; margin-bottom: 6px; }
+}

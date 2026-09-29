@@ -30,6 +30,13 @@
 
 /case-studies/spaceman-bedroom-print.html /case-studies/spaceman-bedroom-print 301
 
+# Shop (Next.js app in /shop, deployed on Vercel). Proxied so customers stay
+# on this domain. "200!" forces the proxy even though the shop/ source folder
+# also exists in this publish directory. Replace the host with the shop's
+# Vercel production domain before merging (see shop/README.md).
+/shop               https://REPLACE-WITH-VERCEL-DOMAIN.invalid/shop          200!
+/shop/*             https://REPLACE-WITH-VERCEL-DOMAIN.invalid/shop/:splat   200!
+
 # Opinly blog integration
 /blog-sitemap.xml   /.netlify/functions/blog-sitemap    200
 /blog-rss.xml       /.netlify/functions/blog-rss         200
