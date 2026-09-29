@@ -22,7 +22,7 @@ Browser ──> Netlify (static site) ──/shop/*──> Vercel (this app) ─
 | `/shop/api/stripe/webhook` | Stripe webhook |
 | `/shop/api/cron/expire-holds` | Releases lapsed slot holds (Vercel Cron) |
 
-Key files: `src/config.ts` (prices, slot times, notice period, limits), `src/lib/pricing.ts` (custom print price formula), `src/lib/booking.ts` (hold → checkout → payment → calendar/email → cancel/refund), `supabase/migrations/0001_shop.sql` (schema).
+Key files: `src/config.ts` (prices, slot times, notice period, limits), `src/lib/pricing.ts` (custom print price: setup + per m²), `src/lib/booking.ts` (hold → checkout → payment → calendar/email → cancel/refund), `supabase/migrations/0001_shop.sql` (schema).
 
 ## How bookings stay safe
 
@@ -101,7 +101,7 @@ Set `SITE_URL=http://localhost:3000` locally so Stripe redirects back to your ma
 
 ## Configuration (`src/config.ts`)
 
-Pricing values are **placeholders** until the owner supplies real numbers. With them, a 10 m² wall prices at £429 inc. VAT. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing.
+Custom prints are priced as a **£150 setup fee + £50 per m²** of print area (same for walls and floors), rounded to the nearest £1. `PRICES_INCLUDE_VAT: true` means those figures are what the customer pays; set it to `false` to add 20% VAT on top. Example: 10 m² = £650. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. Shop products have their own fixed prices, set per size in the admin.
 
 ## Admin
 

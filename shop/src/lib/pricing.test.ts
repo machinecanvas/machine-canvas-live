@@ -2,35 +2,26 @@ import { describe, expect, it } from "vitest";
 import { areaM2, customPrice, dpiVerdict, effectiveDpi, formatGBP, validDimensions } from "./pricing";
 
 describe("customPrice", () => {
-  it("prices a 10 m² wall at roughly £427-£429 inc. VAT", () => {
+  it("charges £150 setup plus £50 per m²", () => {
     const p = customPrice("wall", 500, 200);
     expect(p.areaM2).toBeCloseTo(10);
-    expect(p.material).toBeCloseTo(80);
-    expect(p.labour).toBeCloseTo(114);
-    expect(p.cost).toBeCloseTo(209);
-    // 209 / 0.585 + 0.20 = 357.46 ex VAT -> 428.96 inc VAT -> £429
-    expect(p.exVat).toBeCloseTo(357.46, 2);
-    expect(p.pricePence).toBe(42900);
+    expect(p.setup).toBe(150);
+    expect(p.areaCharge).toBeCloseTo(500);
+    expect(p.pricePence).toBe(65000);
   });
 
-  it("applies the wall minimum order for small jobs", () => {
-    const p = customPrice("wall", 100, 100);
-    expect(p.net).toBeLessThan(120);
-    expect(p.exVat).toBe(120);
-    expect(p.pricePence).toBe(14400);
+  it("prices 1 m² at £200", () => {
+    expect(customPrice("wall", 100, 100).pricePence).toBe(20000);
   });
 
-  it("applies the floor minimum order for small jobs", () => {
-    expect(customPrice("floor", 100, 100).pricePence).toBe(18000);
+  it("uses the same rates for floors", () => {
+    expect(customPrice("floor", 400, 250).pricePence).toBe(customPrice("wall", 400, 250).pricePence);
+    expect(customPrice("floor", 400, 250).pricePence).toBe(65000);
   });
 
-  it("prices floors higher than walls for the same area", () => {
-    expect(customPrice("floor", 400, 250).pricePence).toBeGreaterThan(
-      customPrice("wall", 400, 250).pricePence,
-    );
-  });
-
-  it("always returns whole pounds", () => {
+  it("rounds to the nearest whole pound", () => {
+    // 1.23 m x 4.56 m = 5.6088 m² -> 150 + 280.44 = £430.44 -> £430
+    expect(customPrice("wall", 123, 456).pricePence).toBe(43000);
     for (const [w, h] of [[123, 456], [333, 77], [250, 250]]) {
       expect(customPrice("wall", w, h).pricePence % 100).toBe(0);
     }

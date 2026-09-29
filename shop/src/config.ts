@@ -1,22 +1,18 @@
-// Business settings for the shop. Pricing values are PLACEHOLDERS until the
-// owner supplies real numbers; everything that affects price or availability
-// lives here so it can be changed in one place.
+// Business settings for the shop. Everything that affects price or
+// availability lives here so it can be changed in one place.
 
 export type Category = "wall" | "floor";
 export type Slot = "morning" | "evening";
 
 export const CATEGORIES: Category[] = ["wall", "floor"];
 
+// Custom print price = setup fee + rate per m² of print area.
 export const PRICING = {
-  MATERIAL_PER_M2: { wall: 8, floor: 14 } as Record<Category, number>, // £ per m²
-  HOURS_PER_M2: { wall: 0.33, floor: 0.5 } as Record<Category, number>,
-  MIN_ORDER: { wall: 120, floor: 150 } as Record<Category, number>, // £ ex VAT
-  SETUP_HOURS: 0.5,
-  HOURLY_RATE: 30, // £
-  TRAVEL: 15, // £
-  MARGIN: 0.4,
-  CARD_PCT: 0.015,
-  CARD_FIXED: 0.2, // £
+  SETUP: { wall: 150, floor: 150 } as Record<Category, number>, // £
+  PER_M2: { wall: 50, floor: 50 } as Record<Category, number>, // £ per m²
+  // true: the figures above are what the customer pays (VAT included).
+  // false: they are ex VAT and 20% is added on top.
+  PRICES_INCLUDE_VAT: true,
   VAT: 0.2,
   ROUND_TO_PENCE: 100, // round final price to the nearest £1 (use 50 for 50p)
 };

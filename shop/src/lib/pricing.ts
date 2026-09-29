@@ -2,11 +2,8 @@ import { PRICING, CUSTOM_UPLOAD, BOOKING, type Category } from "@/config";
 
 export type PriceBreakdown = {
   areaM2: number;
-  material: number;
-  labour: number;
-  cost: number;
-  net: number; // £ ex VAT, before minimum order
-  exVat: number; // £ ex VAT after minimum order
+  setup: number; // £
+  areaCharge: number; // £
   pricePence: number; // final price inc. VAT, rounded
   overMaxArea: boolean;
 };
@@ -16,29 +13,18 @@ export function areaM2(widthCm: number, heightCm: number): number {
 }
 
 /**
- * Price for a custom print. Runs on both client (live preview) and server
- * (Stripe session creation); the server value is the only one ever charged.
+ * Price for a custom print: setup fee + rate per m². Runs on both client
+ * (live preview) and server (Stripe session creation); the server value is
+ * the only one ever charged.
  */
 export function customPrice(category: Category, widthCm: number, heightCm: number): PriceBreakdown {
   const p = PRICING;
   const area = areaM2(widthCm, heightCm);
-  const material = area * p.MATERIAL_PER_M2[category];
-  const labour = (p.SETUP_HOURS + area * p.HOURS_PER_M2[category]) * p.HOURLY_RATE;
-  const cost = material + labour + p.TRAVEL;
-  const net = cost / (1 - p.MARGIN - p.CARD_PCT) + p.CARD_FIXED;
-  const exVat = Math.max(net, p.MIN_ORDER[category]);
-  const incVatPence = exVat * (1 + p.VAT) * 100;
-  const pricePence = Math.round(incVatPence / p.ROUND_TO_PENCE) * p.ROUND_TO_PENCE;
-  return {
-    areaM2: area,
-    material,
-    labour,
-    cost,
-    net,
-    exVat,
-    pricePence,
-    overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT,
-  };
+  const setup = p.SETUP[category];
+  const areaCharge = area * p.PER_M2[category];
+  const incVat = (setup + areaCharge) * (p.PRICES_INCLUDE_VAT ? 1 : 1 + p.VAT);
+  const pricePence = Math.round((incVat * 100) / p.ROUND_TO_PENCE) * p.ROUND_TO_PENCE;
+  return { areaM2: area, setup, areaCharge, pricePence, overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT };
 }
 
 export function validDimensions(widthCm: number, heightCm: number): boolean {

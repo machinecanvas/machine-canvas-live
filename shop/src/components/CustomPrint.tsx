@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, BUSINESS, CUSTOM_UPLOAD, type Category } from "@/config";
+import { BOOKING, BUSINESS, CUSTOM_UPLOAD, PRICING, type Category } from "@/config";
 import { api } from "@/lib/paths";
 import { customPrice, dpiVerdict, effectiveDpi, formatGBP, validDimensions } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -183,6 +183,11 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
           {price && (
             <p className="mt-4 font-display text-3xl font-extrabold">
               {formatGBP(price.pricePence)} <span className="text-sm font-normal text-zinc-400">inc. VAT &amp; installation</span>
+            </p>
+          )}
+          {price && (
+            <p className="mt-1 font-mono text-xs text-zinc-500">
+              {formatGBP(price.setup * 100)} setup + {price.areaM2.toFixed(2)} m² × {formatGBP(PRICING.PER_M2[category] * 100)}/m²
             </p>
           )}
         </section>
