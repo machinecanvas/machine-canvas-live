@@ -41,7 +41,7 @@ Do everything in **test mode** first and run the checklist at the bottom before 
 ### 1. Supabase
 
 1. Create a project at supabase.com (region: London `eu-west-2`).
-2. Open `supabase/setup.sql`, copy **all of its contents** (not just the file name), paste them into **SQL Editor → New query** and click **Run**. It should say "Success. No rows returned". This creates the tables, functions, security policies, two storage buckets (`product-images` public, `custom-uploads` private) and the five launch products. It's safe to run again if anything goes wrong. (The same SQL is split into `migrations/0001_shop.sql` and `0002_window_prints.sql` for the Supabase CLI.)
+2. Open `supabase/setup.sql`, copy **all of its contents** (not just the file name), paste them into **SQL Editor → New query** and click **Run**. It should say "Success. No rows returned". This creates the tables, functions, security policies, two storage buckets (`product-images` public, `custom-uploads` private) and the five launch products. It's safe to run again if anything goes wrong. (The same SQL is split into `migrations/0001_shop.sql`, `0002_window_prints.sql` and `0003_area_pricing.sql` for the Supabase CLI.)
 3. **Project settings → API keys**: copy the project URL, the **publishable** key and a **secret** key into the env vars below.
 4. **Authentication → Email templates → Magic link**: add the code so the admin sign-in email includes it, e.g. `<p>Your sign-in code: <strong>{{ .Token }}</strong></p>`.
 5. Optional but recommended: **Authentication → SMTP** — send auth emails through Resend (smtp.resend.com), because Supabase's built-in email is heavily rate-limited.
@@ -101,7 +101,7 @@ Set `SITE_URL=http://localhost:3000` locally so Stripe redirects back to your ma
 
 ## Configuration (`src/config.ts`)
 
-Custom prints use the main site's published pricing: **£197 minimum (covers up to 1 m²), then £49 per extra m²**, VAT included, same for walls and floors, rounded to the nearest £1 (10 m² = £638). **New customers get 50% off their first booking** (shop products and custom prints). A customer counts as new if no paid booking, or current slot hold, exists for their email or phone number. The discount is decided on the server at checkout, shown on the Stripe page, in the emails and in the admin. Set `NEW_CUSTOMER_DISCOUNT_PCT` to `0` to turn it off. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. Shop products have their own fixed prices, set per size in the admin.
+Every print, shop designs and custom uploads alike, is priced by area: **£197 setup + £97 per m²**, VAT included, to the exact penny, same for walls and floors (a 1 m × 1.5 m print is £197 + 1.5 × £97 = £342.50). **A customer's first booking is £150 setup + £50 per m²** instead (1 m × 1.5 m = £225). A customer counts as new if no paid booking, or current slot hold, exists for their email or phone number. This is decided on the server at checkout and shown on the Stripe page, in the emails and in the admin. Set `PRICING.NEW_CUSTOMER` to `null` to switch the offer off. Every design also has a **Custom size** option: the customer types a width and height (proportions locked by default) and the price updates live. Other settings: slot names and times, notice period (2 days), how far ahead customers can book (180 days), hold length (10 min), max area per slot (15 m²), upload limits and DPI thresholds (warn below 100, block below 50). Change a value and redeploy. The unit tests in `src/lib/pricing.test.ts` pin the current formula, so update them along with the pricing. In the admin you set each design's listed sizes; their prices are worked out from the formula.
 
 ## Room photos
 
@@ -111,13 +111,14 @@ Each product can have a **room photo**: the print shown on a wall in a real-look
 
 Go to `/shop/admin`, enter an email from `ADMIN_EMAILS`, and type the 6-digit code from the email.
 
-- **Products:** drag and drop the design image (and optionally a room photo) (the original is kept and a 1600px WebP is generated), then set title, description, wall/floor, one or more sizes with prices inc. VAT, and whether it's visible. The list shows how many times each product has sold. You can hide/show or delete a product; deleting keeps its past bookings.
+- **Products:** drag and drop the design image (and optionally a room photo) (the original is kept and a 1600px WebP is generated), then set title, description, wall/floor, one or more listed sizes (prices are worked out from the size) and whether it's visible. The list shows how many times each product has sold. You can hide/show or delete a product; deleting keeps its past bookings.
 - **Bookings:** upcoming and past, with customer details and a download link for custom artwork. **Cancel & refund** refunds in full through Stripe, frees the slot and deletes the calendar event.
 - **Block-out dates:** block a whole day or one slot. Existing bookings on that day are not affected.
 
 ## Test checklist (Stripe test mode)
 
-- [ ] First booking with a new email: Stripe shows 50% off. A second booking with the same email or phone is full price.
+- [ ] First booking with a new email: Stripe shows the new-customer price (£225 for 1 m × 1.5 m). A second booking with the same email or phone is full price (£342.50).
+- [ ] Custom size on a design: change the width, the height follows, and the price updates; checkout charges that exact amount.
 - [ ] Product purchase with card `4242 4242 4242 4242`: success page shows; customer and owner emails arrive with a working `.ics`; calendar event created; `purchase_count` +1; the slot now shows as taken.
 - [ ] Custom upload: a small JPG at a big size shows the warning or block; a PDF uploads; the owner email download link works.
 - [ ] Two browsers pick the same slot at once: the second gets "slot has just been taken".

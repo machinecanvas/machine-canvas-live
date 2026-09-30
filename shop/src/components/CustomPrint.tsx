@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, BUSINESS, CUSTOM_UPLOAD, NEW_CUSTOMER_DISCOUNT_PCT, PRICING, type Category } from "@/config";
+import { BOOKING, BUSINESS, CUSTOM_UPLOAD, type Category } from "@/config";
 import { api } from "@/lib/paths";
-import { customPrice, dpiVerdict, effectiveDpi, formatGBP, newCustomerDiscount, validDimensions } from "@/lib/pricing";
+import { dpiVerdict, effectiveDpi, formatGBP, formatM2, quote, validDimensions } from "@/lib/pricing";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
@@ -41,7 +41,7 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
   const w = Number(width);
   const h = Number(height);
   const dimsOk = validDimensions(w, h);
-  const price = dimsOk ? customPrice(category, w, h) : null;
+  const price = dimsOk ? quote(w, h) : null;
   const dpi = useMemo(
     () => (upload?.pxW && upload.pxH && dimsOk ? effectiveDpi(upload.pxW, upload.pxH, w, h) : null),
     [upload, dimsOk, w, h],
@@ -140,7 +140,7 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
           </div>
           {price && (
             <p className="mt-3 font-mono text-xs text-zinc-500">
-              Area {price.areaM2.toFixed(2)} m² · max {BOOKING.MAX_AREA_M2_PER_SLOT} m² per booking
+              Area {formatM2(price.areaM2)} · max {BOOKING.MAX_AREA_M2_PER_SLOT} m² per booking
             </p>
           )}
         </section>
@@ -182,19 +182,11 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
           </div>
           {price && (
             <p className="mt-4 font-display text-3xl font-extrabold">
-              {formatGBP(price.pricePence)} <span className="text-sm font-normal text-zinc-400">inc. VAT &amp; installation</span>
+              {formatGBP(price.standard.pricePence)} <span className="text-sm font-normal text-zinc-400">inc. VAT &amp; installation</span>
             </p>
           )}
-          {price && (
-            <p className="mt-1 font-mono text-xs text-zinc-500">
-              {formatGBP(price.minJob * 100)} up to {PRICING.INCLUDED_M2} m²
-              {price.extraM2 > 0 && ` + ${price.extraM2.toFixed(2)} m² × ${formatGBP(PRICING.PER_EXTRA_M2[category] * 100)}`}
-            </p>
-          )}
-          {price && NEW_CUSTOMER_DISCOUNT_PCT > 0 && (
-            <p className="mt-2 text-sm text-cyan">
-              First booking with us? {formatGBP(price.pricePence - newCustomerDiscount(price.pricePence))} with {NEW_CUSTOMER_DISCOUNT_PCT}% off.
-            </p>
+          {price?.newCustomer && (
+            <p className="mt-1 text-sm text-cyan">First booking with us? {formatGBP(price.newCustomer.pricePence)}</p>
           )}
         </section>
 
@@ -204,7 +196,7 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
               ? { kind: "custom", uploadPath: upload.path, category, widthCm: w, heightCm: h, acceptLowRes }
               : null
           }
-          pricePence={price?.pricePence ?? null}
+          price={price}
           blockedReason={blockedReason}
           firstMonth={firstMonth}
           lastMonth={lastMonth}

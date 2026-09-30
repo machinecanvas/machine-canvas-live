@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import type { Category } from "@/config";
 import type { Product } from "@/lib/types";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { formatGBP, quote } from "@/lib/pricing";
 import { productUploadUrl, saveProduct } from "../actions";
 
-type SizeRow = { label: string; width: string; height: string; price: string };
+type SizeRow = { label: string; width: string; height: string };
 
 const slugify = (s: string) =>
   s
@@ -24,8 +25,8 @@ export function ProductForm({ product }: { product?: Product }) {
   const [category, setCategory] = useState<Category>(product?.category ?? "wall");
   const [active, setActive] = useState(product?.active ?? true);
   const [sizes, setSizes] = useState<SizeRow[]>(
-    product?.size_options.map((s) => ({ label: s.label, width: String(s.width_cm), height: String(s.height_cm), price: (s.price_pence / 100).toFixed(2) })) ?? [
-      { label: "Standard", width: "", height: "", price: "" },
+    product?.size_options.map((s) => ({ label: s.label, width: String(s.width_cm), height: String(s.height_cm) })) ?? [
+      { label: "Standard", width: "", height: "" },
     ],
   );
   const [preview, setPreview] = useState<string | null>(product?.image_url ?? null);
@@ -82,7 +83,6 @@ export function ProductForm({ product }: { product?: Product }) {
           label: s.label,
           width_cm: Number(s.width),
           height_cm: Number(s.height),
-          price_pence: Math.round(Number(s.price) * 100),
         })),
       });
       if (res?.error) setError(res.error);
@@ -167,14 +167,16 @@ export function ProductForm({ product }: { product?: Product }) {
         </div>
 
         <fieldset>
-          <legend className="mono-label mb-2">Sizes &amp; prices (inc. VAT)</legend>
+          <legend className="mono-label mb-2">Sizes (price is worked out from the size; customers can also pick a custom size)</legend>
           <div className="space-y-2">
             {sizes.map((s, i) => (
               <div key={i} className="grid grid-cols-[1fr_4.5rem_4.5rem_5.5rem_auto] gap-2">
                 <input className="field" placeholder="Label" required value={s.label} onChange={(e) => updateSize(i, { label: e.target.value })} aria-label="Size label" />
                 <input className="field" placeholder="W cm" type="number" min="1" required value={s.width} onChange={(e) => updateSize(i, { width: e.target.value })} aria-label="Width cm" />
                 <input className="field" placeholder="H cm" type="number" min="1" required value={s.height} onChange={(e) => updateSize(i, { height: e.target.value })} aria-label="Height cm" />
-                <input className="field" placeholder="£" type="number" min="1" step="0.01" required value={s.price} onChange={(e) => updateSize(i, { price: e.target.value })} aria-label="Price £" />
+                <span className="self-center font-mono text-sm text-zinc-400" aria-label="Price">
+                  {Number(s.width) > 0 && Number(s.height) > 0 ? formatGBP(quote(Number(s.width), Number(s.height)).standard.pricePence) : "£—"}
+                </span>
                 <button
                   type="button"
                   className="px-2 text-zinc-500 hover:text-magenta disabled:opacity-30"
@@ -187,7 +189,7 @@ export function ProductForm({ product }: { product?: Product }) {
               </div>
             ))}
           </div>
-          <button type="button" className="mt-2 font-mono text-xs text-cyan" onClick={() => setSizes((r) => [...r, { label: "", width: "", height: "", price: "" }])}>
+          <button type="button" className="mt-2 font-mono text-xs text-cyan" onClick={() => setSizes((r) => [...r, { label: "", width: "", height: "" }])}>
             + Add size
           </button>
         </fieldset>

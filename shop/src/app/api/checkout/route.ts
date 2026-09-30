@@ -5,7 +5,14 @@ import { DATE_RE } from "@/lib/dates";
 import { rateLimit } from "@/lib/rate-limit";
 
 const Item = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("product"), productId: z.uuid(), sizeLabel: z.string().min(1).max(100) }),
+  z.object({
+    kind: z.literal("product"),
+    productId: z.uuid(),
+    size: z.union([
+      z.object({ label: z.string().min(1).max(100) }),
+      z.object({ widthCm: z.number().finite(), heightCm: z.number().finite() }),
+    ]),
+  }),
   z.object({
     kind: z.literal("custom"),
     uploadPath: z.string().max(200),

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { BOOKING, BUSINESS, NEW_CUSTOMER_DISCOUNT_PCT } from "@/config";
+import { BOOKING, BUSINESS } from "@/config";
 import { api } from "@/lib/paths";
-import { formatGBP, newCustomerDiscount } from "@/lib/pricing";
+import { formatGBP, formatM2, type Quote } from "@/lib/pricing";
 import { BookingCalendar, type SlotChoice } from "@/components/BookingCalendar";
 
 export type CheckoutItem =
-  | { kind: "product"; productId: string; sizeLabel: string }
+  | { kind: "product"; productId: string; size: { label: string } | { widthCm: number; heightCm: number } }
   | { kind: "custom"; uploadPath: string; category: "wall" | "floor"; widthCm: number; heightCm: number; acceptLowRes: boolean };
 
 /**
@@ -17,13 +17,13 @@ export type CheckoutItem =
  */
 export function CheckoutForm({
   item,
-  pricePence,
+  price,
   blockedReason,
   firstMonth,
   lastMonth,
 }: {
   item: CheckoutItem | null;
-  pricePence: number | null;
+  price: Quote | null;
   blockedReason: string | null;
   firstMonth: string;
   lastMonth: string;
@@ -121,14 +121,19 @@ export function CheckoutForm({
             <div>
               <p className="mono-label">Total</p>
               <p className="font-display text-3xl font-extrabold">
-                {pricePence ? formatGBP(pricePence) : "—"} <span className="text-sm font-normal text-zinc-400">inc. VAT</span>
+                {price ? formatGBP(price.standard.pricePence) : "—"} <span className="text-sm font-normal text-zinc-400">inc. VAT &amp; installation</span>
               </p>
-              {pricePence && NEW_CUSTOMER_DISCOUNT_PCT > 0 ? (
-                <p className="mt-1 text-sm text-cyan">
-                  First booking with us? You pay {formatGBP(pricePence - newCustomerDiscount(pricePence))} ({NEW_CUSTOMER_DISCOUNT_PCT}% off, applied
-                  automatically at checkout).
+              {price && (
+                <p className="mt-1 font-mono text-xs text-zinc-500">
+                  {formatGBP(price.standard.setupPence)} setup + {formatM2(price.areaM2)} × {formatGBP(price.standard.perM2 * 100)}/m²
                 </p>
-              ) : null}
+              )}
+              {price?.newCustomer && (
+                <p className="mt-2 text-sm text-cyan">
+                  First booking with us? You pay {formatGBP(price.newCustomer.pricePence)} ({formatGBP(price.newCustomer.setupPence)} setup +{" "}
+                  {formatM2(price.areaM2)} × {formatGBP(price.newCustomer.perM2 * 100)}/m²), applied automatically at checkout.
+                </p>
+              )}
             </div>
             <button type="submit" className="btn btn-cyan" disabled={!item || !choice || submitting}>
               {submitting ? "Reserving your slot…" : choice ? "Continue to payment" : "Choose a date first"}

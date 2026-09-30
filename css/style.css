@@ -394,3 +394,33 @@ p { margin: 0; }
   html { scroll-behavior: auto; }
   * { transition-duration: 0.001ms !important; }
 }
+
+/* ---------- New customer offer (home page) ---------- */
+.promo { position: relative; overflow: hidden; background: var(--ink); border-top: 1px solid var(--zinc-800); border-bottom: 1px solid var(--zinc-800); padding: 56px 0; }
+.promo::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+  background:
+    radial-gradient(circle at 12% 30%, rgba(255,43,214,0.45), transparent 42%),
+    radial-gradient(circle at 88% 80%, rgba(0,229,255,0.35), transparent 45%),
+    radial-gradient(rgba(255,230,0,0.35) 1px, transparent 1.5px) 0 0 / 14px 14px; }
+.promo-inner { position: relative; display: flex; flex-direction: column; gap: 32px; align-items: flex-start; }
+@media (min-width: 900px) { .promo-inner { flex-direction: row; align-items: center; gap: 56px; } }
+.promo-badge { flex-shrink: 0; width: 170px; height: 170px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--yellowk); color: var(--ink); box-shadow: 10px 10px 0 var(--magenta); transform: rotate(-8deg); }
+@media (min-width: 900px) { .promo-badge { width: 220px; height: 220px; } }
+.promo-badge-big { font-family: "Fraunces", Georgia, serif; font-weight: 900; font-size: 5.5rem; line-height: 0.85; }
+@media (min-width: 900px) { .promo-badge-big { font-size: 7.5rem; } }
+.promo-badge-small { font-family: "JetBrains Mono", monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.95rem; }
+.promo-eyebrow { color: var(--yellowk) !important; }
+.promo h2 { color: #fff; font-family: "Fraunces", Georgia, serif; font-weight: 900; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1; margin-top: 12px; max-width: 760px; }
+.promo-prices { list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.promo-prices li { display: flex; align-items: baseline; gap: 10px; color: #fff; }
+.promo-was { font-family: "Cabinet Grotesk", sans-serif; font-weight: 700; font-size: 1.3rem; color: var(--zinc-500); text-decoration: line-through; text-decoration-color: var(--magenta); text-decoration-thickness: 2px; }
+.promo-now { font-family: "Cabinet Grotesk", sans-serif; font-weight: 900; font-size: 2.4rem; color: var(--cyan); }
+.promo-unit { font-family: "JetBrains Mono", monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--zinc-400); }
+.promo-note { margin-top: 18px; color: #e4e4e7; font-size: 1.05rem; max-width: 620px; }
+.promo-cta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 14px; }
+.promo-fine { margin-top: 14px; font-size: 0.8rem; color: var(--zinc-500); max-width: 620px; }
+@media (prefers-reduced-motion: no-preference) {
+  .promo-badge { animation: promo-wobble 6s ease-in-out infinite; }
+  @keyframes promo-wobble { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(-3deg) scale(1.03); } }
+}

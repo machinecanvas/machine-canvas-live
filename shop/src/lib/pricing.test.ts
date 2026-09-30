@@ -1,48 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { areaM2, customPrice, dpiVerdict, effectiveDpi, formatGBP, newCustomerDiscount, validDimensions } from "./pricing";
+import { areaM2, dpiVerdict, effectiveDpi, formatGBP, formatM2, newCustomerDiscount, quote, validDimensions } from "./pricing";
 
-describe("customPrice", () => {
-  it("charges the £197 minimum for anything up to 1 m²", () => {
-    expect(customPrice("wall", 100, 100).pricePence).toBe(19700);
-    expect(customPrice("wall", 50, 50).pricePence).toBe(19700);
+describe("quote", () => {
+  it("charges £197 setup + £97 per m² normally", () => {
+    const q = quote(100, 150); // 1.5 m²
+    expect(q.areaM2).toBeCloseTo(1.5);
+    expect(q.standard.setupPence).toBe(19700);
+    expect(q.standard.areaPence).toBe(14550);
+    expect(q.standard.pricePence).toBe(34250);
   });
 
-  it("adds £49 per m² beyond the first", () => {
-    const p = customPrice("wall", 500, 200); // 10 m²
-    expect(p.areaM2).toBeCloseTo(10);
-    expect(p.extraM2).toBeCloseTo(9);
-    expect(p.extraCharge).toBeCloseTo(441);
-    expect(p.pricePence).toBe(63800);
+  it("charges £150 setup + £50 per m² on a first booking", () => {
+    const q = quote(100, 150);
+    expect(q.newCustomer?.pricePence).toBe(22500);
+    expect(newCustomerDiscount(q)).toBe(34250 - 22500);
+    expect(quote(100, 100).newCustomer?.pricePence).toBe(20000); // 1 m²
   });
 
-  it("prices floors the same as walls", () => {
-    expect(customPrice("floor", 400, 250).pricePence).toBe(customPrice("wall", 400, 250).pricePence);
-  });
-
-  it("rounds to the nearest whole pound", () => {
-    // 1.23 m x 4.56 m = 5.6088 m² -> 197 + 4.6088 x 49 = £422.83 -> £423
-    expect(customPrice("wall", 123, 456).pricePence).toBe(42300);
-    for (const [w, h] of [[123, 456], [333, 77], [250, 250]]) {
-      expect(customPrice("wall", w, h).pricePence % 100).toBe(0);
-    }
+  it("prices to the exact penny", () => {
+    // 1.23 m × 4.56 m = 5.6088 m² → 197 + 5.6088 × 97 = £741.05
+    expect(quote(123, 456).standard.pricePence).toBe(74105);
+    // new customer: 150 + 5.6088 × 50 = £430.44
+    expect(quote(123, 456).newCustomer?.pricePence).toBe(43044);
   });
 
   it("flags jobs over the per-slot area limit", () => {
-    expect(customPrice("wall", 500, 300).overMaxArea).toBe(false); // exactly 15 m²
-    expect(customPrice("wall", 500, 301).overMaxArea).toBe(true);
-  });
-});
-
-describe("newCustomerDiscount", () => {
-  it("takes 50% off", () => {
-    expect(newCustomerDiscount(19700)).toBe(9850);
-    expect(newCustomerDiscount(63800)).toBe(31900);
+    expect(quote(500, 300).overMaxArea).toBe(false); // exactly 15 m²
+    expect(quote(500, 301).overMaxArea).toBe(true);
   });
 });
 
 describe("helpers", () => {
   it("computes area in m²", () => {
     expect(areaM2(250, 200)).toBeCloseTo(5);
+    expect(formatM2(1.5)).toBe("1.5 m²");
+    expect(formatM2(5.60881)).toBe("5.61 m²");
   });
 
   it("validates dimensions", () => {
