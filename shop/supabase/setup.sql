@@ -1,6 +1,6 @@
 -- Machine Canvas shop: complete database setup.
 -- Paste this whole file into Supabase → SQL Editor → New query, then click Run.
--- It combines migrations/0001_shop.sql and migrations/0002_window_prints.sql
+-- It combines migrations/0001_shop.sql, 0002_window_prints.sql and 0003_area_pricing.sql
 -- and is safe to run more than once.
 
 -- Machine Canvas shop: products, bookings, block-out dates, rate limits and
@@ -319,3 +319,28 @@ values
     '[{"label": "1.5 m × 1 m (landscape)", "width_cm": 150, "height_cm": 100, "price_pence": 35000}]'
   )
 on conflict (slug) do nothing;
+
+-- Prices now come from the pricing formula in src/config.ts (setup fee +
+-- rate per m²) for every size, and customers can pick a custom size on any
+-- design. This refreshes the stored reference prices of the launch prints
+-- (1.5 m²: £197 + 1.5 × £97 = £342.50) and updates their descriptions.
+-- The shop never charges the stored price, so this is tidy-up only.
+-- Safe to re-run.
+
+update public.products
+set
+  price_pence = 34250,
+  size_options = jsonb_set(size_options, '{0,price_pence}', '34250'),
+  description = replace(
+    description,
+    'Price includes setup, printing and installation.',
+    'Also available in any custom size. Price includes setup, printing and installation.'
+  )
+where slug in (
+  'blackpool-tower-sash-window',
+  'harbour-shutters-window',
+  'coastal-dunes-arched-window',
+  'cornish-harbour-arched-window',
+  'mediterranean-marina-window'
+)
+and description not like '%any custom size%';

@@ -1,36 +1,49 @@
-import { PRICING, CUSTOM_UPLOAD, BOOKING, NEW_CUSTOMER_DISCOUNT_PCT, type Category } from "@/config";
+import { PRICING, CUSTOM_UPLOAD, BOOKING } from "@/config";
 
-export type PriceBreakdown = {
+export type Rate = { setup: number; perM2: number }; // £
+
+export type RatedPrice = {
+  setupPence: number;
+  areaPence: number; // area × rate per m²
+  pricePence: number; // total inc. VAT
+};
+
+export type Quote = {
   areaM2: number;
-  minJob: number; // £, covers the first PRICING.INCLUDED_M2
-  extraM2: number;
-  extraCharge: number; // £
-  pricePence: number; // full price inc. VAT, rounded
+  standard: RatedPrice & Rate;
+  newCustomer: (RatedPrice & Rate) | null; // null when there's no new-customer offer
   overMaxArea: boolean;
 };
 
 export function areaM2(widthCm: number, heightCm: number): number {
-  return (widthCm / 100) * (heightCm / 100);
+  return (widthCm * heightCm) / 10000;
+}
+
+function rated(area: number, rate: Rate): RatedPrice & Rate {
+  const setupPence = Math.round(rate.setup * 100);
+  const areaPence = Math.round(area * rate.perM2 * 100);
+  return { ...rate, setupPence, areaPence, pricePence: setupPence + areaPence };
 }
 
 /**
- * Full price for a custom print (before any new-customer discount). Runs on
- * both client (live preview) and server (Stripe session creation); the
- * server value is the only one ever charged.
+ * Price of any print at a given size: setup fee + area × rate per m², to the
+ * penny. Runs on both client (live preview) and server (Stripe session
+ * creation); the server value is the only one ever charged.
  */
-export function customPrice(category: Category, widthCm: number, heightCm: number): PriceBreakdown {
-  const p = PRICING;
+export function quote(widthCm: number, heightCm: number): Quote {
   const area = areaM2(widthCm, heightCm);
-  const minJob = p.MIN_JOB[category];
-  const extraM2 = Math.max(0, area - p.INCLUDED_M2);
-  const extraCharge = extraM2 * p.PER_EXTRA_M2[category];
-  const pricePence = Math.round(((minJob + extraCharge) * 100) / p.ROUND_TO_PENCE) * p.ROUND_TO_PENCE;
-  return { areaM2: area, minJob, extraM2, extraCharge, pricePence, overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT };
+  const nc = PRICING.NEW_CUSTOMER;
+  return {
+    areaM2: area,
+    standard: rated(area, { setup: PRICING.SETUP, perM2: PRICING.PER_M2 }),
+    newCustomer: nc ? rated(area, { setup: nc.SETUP, perM2: nc.PER_M2 }) : null,
+    overMaxArea: area > BOOKING.MAX_AREA_M2_PER_SLOT,
+  };
 }
 
-/** Discount in pence for a first-time customer on a given full price. */
-export function newCustomerDiscount(fullPricePence: number): number {
-  return Math.round((fullPricePence * NEW_CUSTOMER_DISCOUNT_PCT) / 100);
+/** Discount in pence a first-time customer gets at this size (0 if there's no offer). */
+export function newCustomerDiscount(q: Quote): number {
+  return q.newCustomer ? Math.max(0, q.standard.pricePence - q.newCustomer.pricePence) : 0;
 }
 
 export function validDimensions(widthCm: number, heightCm: number): boolean {
@@ -60,4 +73,13 @@ export function formatGBP(pence: number): string {
     currency: "GBP",
     minimumFractionDigits: pence % 100 === 0 ? 0 : 2,
   }).format(pence / 100);
+}
+
+export function formatM2(m2: number): string {
+  return `${Number(m2.toFixed(2))} m²`;
+}
+
+/** Lowest standard price across a product's listed sizes ("from £X"). */
+export function fromPricePence(sizes: { width_cm: number; height_cm: number }[]): number {
+  return Math.min(...sizes.map((s) => quote(s.width_cm, s.height_cm).standard.pricePence));
 }

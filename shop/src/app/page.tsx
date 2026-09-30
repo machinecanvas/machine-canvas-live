@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CATEGORIES, NEW_CUSTOMER_DISCOUNT_PCT, type Category } from "@/config";
+import { CATEGORIES, PRICING, type Category } from "@/config";
 import { listActiveProducts } from "@/lib/products";
-import { formatGBP } from "@/lib/pricing";
+import { formatGBP, fromPricePence } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +26,12 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             Pick a design, choose your install date and pay online. We print it directly onto your wall or floor. All prices include VAT and
             installation.
           </p>
-          {NEW_CUSTOMER_DISCOUNT_PCT > 0 && (
-            <p className="mt-4 inline-block border border-cyan px-3 py-2 font-mono text-xs uppercase tracking-widest text-cyan">
-              New customers: {NEW_CUSTOMER_DISCOUNT_PCT}% off your first booking
+          <p className="mt-4 font-mono text-xs text-zinc-500">
+            £{PRICING.SETUP} setup + £{PRICING.PER_M2} per m². Every design can be printed at any size.
+          </p>
+          {PRICING.NEW_CUSTOMER && (
+            <p className="mt-3 inline-block border border-cyan px-3 py-2 font-mono text-xs uppercase tracking-widest text-cyan">
+              First booking: £{PRICING.NEW_CUSTOMER.SETUP} setup + £{PRICING.NEW_CUSTOMER.PER_M2} per m²
             </p>
           )}
         </div>
@@ -74,8 +77,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                   <h2 className="text-xl">{p.title}</h2>
                   <div className="mt-3 flex items-baseline justify-between gap-4">
                     <p className="font-semibold">
-                      {p.size_options.length > 1 ? "From " : ""}
-                      {formatGBP(p.price_pence)} <span className="text-xs font-normal text-zinc-500">inc. VAT</span>
+                      {formatGBP(fromPricePence(p.size_options))} <span className="text-xs font-normal text-zinc-500">inc. VAT</span>
                     </p>
                     <p className="font-mono text-xs text-zinc-500">
                       Purchased {p.purchase_count} {p.purchase_count === 1 ? "time" : "times"}

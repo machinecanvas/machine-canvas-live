@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { formatGBP } from "@/lib/pricing";
+import { formatGBP, fromPricePence } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
 import { ProductRowActions } from "./ProductRowActions";
 
@@ -33,7 +33,7 @@ export default async function AdminProducts() {
                   {p.title} {!p.active && <span className="ml-2 font-mono text-xs uppercase text-zinc-500">hidden</span>}
                 </p>
                 <p className="text-sm text-zinc-400">
-                  {p.category} · {p.size_options.length} size{p.size_options.length === 1 ? "" : "s"} · from {formatGBP(p.price_pence)} ·{" "}
+                  {p.category} · {p.size_options.length} size{p.size_options.length === 1 ? "" : "s"} · from {formatGBP(fromPricePence(p.size_options))} ·{" "}
                   <strong className="text-paper">{p.purchase_count}</strong> sold
                 </p>
               </div>

@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { PRODUCT_BUCKET } from "@/lib/uploads";
 import { cancelBooking } from "@/lib/booking";
 import { DATE_RE } from "@/lib/dates";
+import { fromPricePence, quote } from "@/lib/pricing";
 
 const IMAGE_EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
@@ -43,7 +44,6 @@ const Size = z.object({
   label: z.string().trim().min(1).max(100),
   width_cm: z.number().positive().max(10000),
   height_cm: z.number().positive().max(10000),
-  price_pence: z.number().int().positive(),
 });
 
 const ProductInput = z.object({
@@ -79,8 +79,9 @@ export async function saveProduct(input: ProductInputType): Promise<{ error?: st
     description: p.description,
     category: p.category,
     active: p.active,
-    size_options: p.sizes,
-    price_pence: Math.min(...p.sizes.map((s) => s.price_pence)),
+    // Prices always come from the pricing formula (src/config.ts); stored for reference.
+    size_options: p.sizes.map((s) => ({ ...s, price_pence: quote(s.width_cm, s.height_cm).standard.pricePence })),
+    price_pence: fromPricePence(p.sizes),
   };
   if (p.originalPath) {
     try {

@@ -1,12 +1,12 @@
 import "server-only";
 import type Stripe from "stripe";
-import { BOOKING, NEW_CUSTOMER_DISCOUNT_PCT, type Category, type Slot } from "@/config";
+import { BOOKING, type Category, type Slot } from "@/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
 import { env, shopUrl } from "@/lib/env";
 import { isSlotAvailable } from "@/lib/availability";
 import { formatLongDate, isBookableDate, slotLabel, slotWindow } from "@/lib/dates";
-import { areaM2, customPrice, formatGBP, newCustomerDiscount, validDimensions } from "@/lib/pricing";
+import { formatGBP, newCustomerDiscount, quote, validDimensions, type Quote } from "@/lib/pricing";
 import { inspectUpload, signedDownloadUrl, uploadDpi } from "@/lib/uploads";
 import { createEvent, deleteEvent } from "@/lib/gcal";
 import { sendBookingEmails, sendConflictEmails } from "@/lib/email";
@@ -17,7 +17,7 @@ export class BookingError extends Error {}
 
 export type CheckoutInput = {
   item:
-    | { kind: "product"; productId: string; sizeLabel: string }
+    | { kind: "product"; productId: string; size: { label: string } | { widthCm: number; heightCm: number } }
     | { kind: "custom"; uploadPath: string; category: Category; widthCm: number; heightCm: number; acceptLowRes: boolean };
   date: string;
   slot: Slot;
@@ -31,7 +31,7 @@ type ResolvedItem = {
   category: Category;
   widthCm: number;
   heightCm: number;
-  amountPence: number;
+  price: Quote;
   title: string;
   imageUrl: string | null;
 };
@@ -43,8 +43,17 @@ async function resolveItem(input: CheckoutInput["item"]): Promise<ResolvedItem> 
     if (error) throw error;
     const product = data as Product | null;
     if (!product) throw new BookingError("This product is no longer available.");
-    const size = product.size_options.find((s) => s.label === input.sizeLabel);
-    if (!size) throw new BookingError("Please choose a size.");
+    // A listed size, or any size the customer typed in ("Custom size").
+    let size: { label: string; width_cm: number; height_cm: number };
+    if ("label" in input.size) {
+      const label = input.size.label;
+      const found = product.size_options.find((s) => s.label === label);
+      if (!found) throw new BookingError("Please choose a size.");
+      size = found;
+    } else {
+      if (!validDimensions(input.size.widthCm, input.size.heightCm)) throw new BookingError("Please enter a valid width and height.");
+      size = { label: "Custom size", width_cm: input.size.widthCm, height_cm: input.size.heightCm };
+    }
     return {
       productId: product.id,
       sizeLabel: size.label,
@@ -52,7 +61,7 @@ async function resolveItem(input: CheckoutInput["item"]): Promise<ResolvedItem> 
       category: product.category,
       widthCm: size.width_cm,
       heightCm: size.height_cm,
-      amountPence: size.price_pence,
+      price: quote(size.width_cm, size.height_cm),
       title: product.title,
       imageUrl: product.image_url,
     };
@@ -72,7 +81,7 @@ async function resolveItem(input: CheckoutInput["item"]): Promise<ResolvedItem> 
     category: input.category,
     widthCm: input.widthCm,
     heightCm: input.heightCm,
-    amountPence: customPrice(input.category, input.widthCm, input.heightCm).pricePence,
+    price: quote(input.widthCm, input.heightCm),
     title: "Custom print",
     imageUrl: null,
   };
@@ -111,7 +120,7 @@ export async function expireStaleHolds(filter?: { date: string; slot: Slot }): P
 export async function startCheckout(input: CheckoutInput): Promise<string> {
   const item = await resolveItem(input.item);
 
-  if (areaM2(item.widthCm, item.heightCm) > BOOKING.MAX_AREA_M2_PER_SLOT) {
+  if (item.price.overMaxArea) {
     throw new BookingError(`Jobs over ${BOOKING.MAX_AREA_M2_PER_SLOT} m² need a site survey. Please contact us for a quote.`);
   }
   if (!isBookableDate(input.date)) throw new BookingError("That date can't be booked. Please choose another.");
@@ -123,17 +132,18 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
 
   const db = supabaseAdmin();
 
-  // First booking for this email/phone gets the new-customer discount.
+  // First booking for this email/phone gets the new-customer rates.
+  const fullPence = item.price.standard.pricePence;
   let discountPence = 0;
-  if (NEW_CUSTOMER_DISCOUNT_PCT > 0) {
+  if (item.price.newCustomer) {
     const { data: returning, error: rcErr } = await db.rpc("is_returning_customer", {
       p_email: input.customer.email,
       p_phone: input.customer.phone,
     });
     if (rcErr) throw rcErr;
-    if (returning !== true) discountPence = newCustomerDiscount(item.amountPence);
+    if (returning !== true) discountPence = newCustomerDiscount(item.price);
   }
-  const chargePence = item.amountPence - discountPence;
+  const chargePence = fullPence - discountPence;
 
   const { data: bookingId, error } = await db.rpc("create_hold", {
     p_product_id: item.productId,
@@ -180,7 +190,7 @@ export async function startCheckout(input: CheckoutInput): Promise<string> {
                 name: `${item.title}: ${item.category} print, supplied and installed`,
                 description: [
                   `${item.sizeLabel ? `${item.sizeLabel}, ` : ""}${size}. Installation ${when}.`,
-                  discountPence ? `${NEW_CUSTOMER_DISCOUNT_PCT}% new customer discount applied (normally ${formatGBP(item.amountPence)}).` : "",
+                  discountPence ? `New customer price applied (normally ${formatGBP(fullPence)}).` : "",
                   "Price includes 20% VAT.",
                 ]
                   .filter(Boolean)
