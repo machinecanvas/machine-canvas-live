@@ -61,7 +61,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           </li>
           {products.map((p) => (
             <li key={p.id}>
-              <Link href={`/${p.slug}`} className="group block border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
+              <Link href={`/${p.slug}`} className="group flex h-full flex-col border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
                 <div className="aspect-[4/3] overflow-hidden bg-white">
                   {/* Prefer the room photo (the print on a wall); fall back to the design itself. */}
                   {(p.room_image_url ?? p.image_url) && (
