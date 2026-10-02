@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { calendarMonths } from "@/lib/booking-window";
 import { CustomPrint } from "@/components/CustomPrint";
+import { validDimensions } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Print your own image" };
 
-export default function CustomPage() {
+export default async function CustomPage({ searchParams }: { searchParams: Promise<{ w?: string; h?: string }> }) {
+  // Size carried over from the shop card's price calculator, if valid.
+  const { w, h } = await searchParams;
+  const size = validDimensions(Number(w), Number(h)) ? { initialWidth: Number(w), initialHeight: Number(h) } : {};
   return (
     <>
       <Link href="/" className="mono-label hover:text-cyan">
@@ -18,7 +22,7 @@ export default function CustomPage() {
         Upload your artwork or photo, tell us the size of the area, and get an instant price including installation and VAT.
       </p>
       <div className="mt-10">
-        <CustomPrint {...calendarMonths()} />
+        <CustomPrint {...calendarMonths()} {...size} />
       </div>
     </>
   );

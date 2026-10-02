@@ -25,10 +25,20 @@ function readImageSize(url: string): Promise<{ w: number; h: number }> {
   });
 }
 
-export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; lastMonth: string }) {
+export function CustomPrint({
+  firstMonth,
+  lastMonth,
+  initialWidth = 300,
+  initialHeight = 250,
+}: {
+  firstMonth: string;
+  lastMonth: string;
+  initialWidth?: number;
+  initialHeight?: number;
+}) {
   const [category, setCategory] = useState<Category>("wall");
-  const [width, setWidth] = useState("300");
-  const [height, setHeight] = useState("250");
+  const [width, setWidth] = useState(String(initialWidth));
+  const [height, setHeight] = useState(String(initialHeight));
   const [upload, setUpload] = useState<Upload | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -112,6 +122,21 @@ export function CustomPrint({ firstMonth, lastMonth }: { firstMonth: string; las
           </label>
           {uploading && <p className="mt-2 font-mono text-xs text-cyan">Uploading…</p>}
           {uploadError && <p className="mt-2 text-sm text-magenta">{uploadError}</p>}
+          <p className="mt-3 text-sm text-zinc-400">
+            Can&apos;t upload your image, or not sure what you need?{" "}
+            <a href={`${BUSINESS.siteUrl}/contact`} className="text-cyan underline hover:text-white">
+              Contact us
+            </a>
+            , email{" "}
+            <a href={`mailto:${BUSINESS.contactEmail}`} className="text-cyan underline hover:text-white">
+              {BUSINESS.contactEmail}
+            </a>{" "}
+            or call{" "}
+            <a href={`tel:${BUSINESS.phone.replace(/\s/g, "")}`} className="text-cyan underline hover:text-white">
+              {BUSINESS.phone}
+            </a>
+            .
+          </p>
         </section>
 
         <section>

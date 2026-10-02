@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CATEGORIES, PRICING, type Category } from "@/config";
 import { listActiveProducts } from "@/lib/products";
 import { formatGBP, fromPricePence } from "@/lib/pricing";
+import { CustomPrintCard } from "@/components/CustomPrintCard";
 
 export const dynamic = "force-dynamic";
 
@@ -51,15 +52,16 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         })}
       </nav>
 
-      {products.length === 0 ? (
-        <p className="border border-zinc-800 p-10 text-center text-zinc-400">
-          No designs here yet. <Link href="/custom" className="text-cyan underline">Print your own image</Link> instead.
-        </p>
-      ) : (
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {products.length === 0 && (
+        <p className="mb-6 text-zinc-400">No ready-made designs here yet, but you can print your own image.</p>
+      )}
+      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <li>
+            <CustomPrintCard />
+          </li>
           {products.map((p) => (
             <li key={p.id}>
-              <Link href={`/${p.slug}`} className="group block border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
+              <Link href={`/${p.slug}`} className="group flex h-full flex-col border border-zinc-800 bg-zinc-950 transition hover:border-cyan">
                 <div className="aspect-[4/3] overflow-hidden bg-white">
                   {/* Prefer the room photo (the print on a wall); fall back to the design itself. */}
                   {(p.room_image_url ?? p.image_url) && (
@@ -88,7 +90,6 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             </li>
           ))}
         </ul>
-      )}
     </>
   );
 }
