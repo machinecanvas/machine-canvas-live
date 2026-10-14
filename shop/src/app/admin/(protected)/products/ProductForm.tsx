@@ -149,7 +149,7 @@ export function ProductForm({ product }: { product?: Product }) {
         </label>
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex gap-2">
-            {(["wall", "floor"] as Category[]).map((c) => (
+            {(["wall", "floor", "buddha"] as Category[]).map((c) => (
               <button
                 type="button"
                 key={c}
