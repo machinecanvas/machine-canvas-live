@@ -14,14 +14,15 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     ["All", "/"],
     ["Wall prints", "/?category=wall"],
     ["Floor prints", "/?category=floor"],
+    ["Buddha", "/?category=buddha"],
   ];
 
   return (
     <>
       <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="mono-label mb-3">Shop · Supplied &amp; installed</p>
-          <h1 className="font-serif text-4xl font-black sm:text-6xl">Wall &amp; floor prints</h1>
+          <p className="mono-label mb-3">Shop · Supplied & installed</p>
+          <h1 className="font-serif text-4xl font-black sm:text-6xl">Wall & floor prints</h1>
           <p className="mt-4 max-w-xl text-zinc-400">
             Pick a design, choose your install date and pay online. We print it directly onto your wall or floor. All prices include VAT and
             installation.
