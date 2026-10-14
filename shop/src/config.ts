@@ -1,10 +1,10 @@
 // Business settings for the shop. Everything that affects price or
 // availability lives here so it can be changed in one place.
 
-export type Category = "wall" | "floor";
+export type Category = "wall" | "floor" | "buddha";
 export type Slot = "morning" | "evening";
 
-export const CATEGORIES: Category[] = ["wall", "floor"];
+export const CATEGORIES: Category[] = ["wall", "floor", "buddha"];
 
 // Every print (shop designs and custom uploads) is priced the same way,
 // VAT included: a setup fee plus a rate per m² of print area. Walls and
